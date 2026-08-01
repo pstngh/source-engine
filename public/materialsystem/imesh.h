@@ -1921,12 +1921,20 @@ inline void CVertexBuilder::Color4ub( unsigned char r, unsigned char g, unsigned
 {
 	Assert( m_pColor && m_pCurrColor );
 	#ifdef OPENGL_SWAP_COLORS
-		int col = r | (g << 8) | (b << 16) | (a << 24);	// r, g, b, a in memory
+		// Write the OpenGL attribute in memory order.  Besides being clearer, this
+		// avoids signed left-shift overflow and an aliased int store on ARM64.
+		m_pCurrColor[0] = r;
+		m_pCurrColor[1] = g;
+		m_pCurrColor[2] = b;
+		m_pCurrColor[3] = a;
 	#else
-		int col = b | (g << 8) | (r << 16) | (a << 24);
+		m_pCurrColor[0] = b;
+		m_pCurrColor[1] = g;
+		m_pCurrColor[2] = r;
+		m_pCurrColor[3] = a;
 	#endif
 
-	*(int*)m_pCurrColor = col;
+	// Bytes were written directly above.
 }
 
 inline void CVertexBuilder::Color4ubv( unsigned char const* rgba )
@@ -1934,11 +1942,17 @@ inline void CVertexBuilder::Color4ubv( unsigned char const* rgba )
 	Assert( rgba );
 	Assert( m_pColor && m_pCurrColor );
 	#ifdef OPENGL_SWAP_COLORS
-		int col = rgba[0] | (rgba[1] << 8) | (rgba[2] << 16) | (rgba[3] << 24);	// r, g, b, a in memory
+		m_pCurrColor[0] = rgba[0];
+		m_pCurrColor[1] = rgba[1];
+		m_pCurrColor[2] = rgba[2];
+		m_pCurrColor[3] = rgba[3];
 	#else
-		int col = rgba[2] | (rgba[1] << 8) | (rgba[0] << 16) | (rgba[3] << 24);
+		m_pCurrColor[0] = rgba[2];
+		m_pCurrColor[1] = rgba[1];
+		m_pCurrColor[2] = rgba[0];
+		m_pCurrColor[3] = rgba[3];
 	#endif
-	*(int*)m_pCurrColor = col;
+	// Bytes were written directly above.
 }
 
 inline void	CVertexBuilder::Specular3f( float r, float g, float b )
