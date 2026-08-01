@@ -1697,10 +1697,17 @@ void CBasePanel::RunFrame()
 		}
 	}
 
+	if ( bStandaloneAppleSiliconMenu && m_bLevelLoading && m_bEverActivated &&
+		!g_hLoadingDialog.Get() && !GameUI().IsInLevel() )
+	{
+		Msg( "GameUI: clearing stale standalone loading state.\n" );
+		m_bLevelLoading = false;
+	}
+
 	UpdateBackgroundState();
 
 	const bool bStandaloneMenuVisible =
-		bStandaloneAppleSiliconMenu && !m_bLevelLoading && !GameUI().IsInLevel() && !m_ExitingFrameCount;
+		bStandaloneAppleSiliconMenu && !g_hLoadingDialog.Get() && !GameUI().IsInLevel() && !m_ExitingFrameCount;
 	if ( bStandaloneMenuVisible )
 	{
 		if ( m_bFadingInMenus || m_pGameMenu->GetAlpha() != 255 || !m_pGameMenu->IsVisible() )
