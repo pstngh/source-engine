@@ -23,7 +23,9 @@ copy_flag=$(mktemp "${TMPDIR:-/tmp}/source-engine-copy.XXXXXX")
 audit_flag=$(mktemp "${TMPDIR:-/tmp}/source-engine-audit.XXXXXX")
 matches_file=$(mktemp "${TMPDIR:-/tmp}/source-engine-matches.XXXXXX")
 source_map_file=$(mktemp "${TMPDIR:-/tmp}/source-engine-sources.XXXXXX")
-trap 'rm -f "$copy_flag" "$audit_flag" "$matches_file" "$source_map_file"' EXIT HUP INT TERM
+probe_source=$(mktemp "${TMPDIR:-/tmp}/source-engine-sdl-probe.XXXXXX")
+probe_binary=$(mktemp "${TMPDIR:-/tmp}/source-engine-sdl-probe-bin.XXXXXX")
+trap 'rm -f "$copy_flag" "$audit_flag" "$matches_file" "$source_map_file" "$probe_source" "$probe_binary"' EXIT HUP INT TERM
 
 find_macho_files()
 {
@@ -132,6 +134,11 @@ rewrite_dependency()
 	install_name_tool -change "$old_dependency" "$new_dependency" "$candidate"
 }
 
+# Homebrew's SDL2 compatibility layer opens this leaf name with dlopen(), so it
+# does not appear in otool output and must be seeded explicitly.
+sdl3_library="$(brew --prefix sdl3)/lib/libSDL3.dylib"
+copy_homebrew_library "$sdl3_library" > /dev/null
+
 # Repeat until every newly copied Homebrew library has had its own transitive
 # dependencies copied and rewritten as well.
 while :; do
@@ -216,5 +223,56 @@ if [ -e "$audit_flag" ]; then
 	echo "Packaged Mach-O dependency audit failed." >&2
 	exit 1
 fi
+
+cat > "$probe_source" <<'C'
+#include <dlfcn.h>
+#include <stdint.h>
+#include <stdio.h>
+
+typedef struct SDL_version
+{
+	uint8_t major;
+	uint8_t minor;
+	uint8_t patch;
+} SDL_version;
+
+typedef void (*SDL_GetVersionFunction)(SDL_version *version);
+
+int main(int argc, char **argv)
+{
+	void *library;
+	SDL_GetVersionFunction get_version;
+	SDL_version version;
+
+	if (argc != 2) {
+		return 2;
+	}
+
+	library = dlopen(argv[1], RTLD_NOW | RTLD_LOCAL);
+	if (library == NULL) {
+		fprintf(stderr, "SDL runtime probe could not load SDL2: %s\n", dlerror());
+		return 1;
+	}
+
+	get_version = (SDL_GetVersionFunction)dlsym(library, "SDL_GetVersion");
+	if (get_version == NULL) {
+		fprintf(stderr, "SDL runtime probe could not resolve SDL_GetVersion: %s\n", dlerror());
+		dlclose(library);
+		return 1;
+	}
+
+	get_version(&version);
+	printf("SDL compatibility runtime loaded: %u.%u.%u\n",
+	       (unsigned int)version.major,
+	       (unsigned int)version.minor,
+	       (unsigned int)version.patch);
+	dlclose(library);
+	return 0;
+}
+C
+
+clang -arch arm64 -Wall -Wextra -Werror -x c "$probe_source" -o "$probe_binary"
+DYLD_LIBRARY_PATH="$runtime_library_dir${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" \
+	"$probe_binary" "$runtime_library_dir/libSDL2-2.0.0.dylib"
 
 echo "Bundled Homebrew libraries and converted Mach-O dependencies to portable paths."

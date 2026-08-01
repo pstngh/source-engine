@@ -17,7 +17,7 @@ git submodule update --init --recursive
 
 # Use explicit Homebrew dependencies instead of relying on the changing package
 # set baked into GitHub's macOS runner image.
-brew install pkgconf sdl2-compat freetype fontconfig jpeg-turbo libpng curl zlib bzip2
+brew install pkgconf sdl2-compat sdl3 freetype fontconfig jpeg-turbo libpng curl zlib bzip2
 
 pkg_config_path=${PKG_CONFIG_PATH:-}
 cppflags=${CPPFLAGS:-}
@@ -51,6 +51,8 @@ launcher_script="$install_prefix/launch-cstrike.command"
 {
 	echo '#!/bin/sh'
 	echo "cd \"\$(dirname \"\$0\")\" || exit 1"
+	echo "runtime_library_dir=\"\$PWD/bin/third_party\""
+	echo "export DYLD_LIBRARY_PATH=\"\$runtime_library_dir\${DYLD_LIBRARY_PATH:+:\$DYLD_LIBRARY_PATH}\""
 	echo "exec ./hl2_launcher -game cstrike \"\$@\""
 } > "$launcher_script"
 chmod +x "$launcher_script"
@@ -87,6 +89,7 @@ done
 	echo "Game: cstrike"
 	echo "Mach-O files: $mach_o_count"
 	echo "Runtime libraries: bundled and relocatable"
+	echo "SDL runtime: SDL2 compatibility layer with bundled SDL3"
 	echo "Code signature: ad hoc"
 } > "$install_prefix/BUILD-INFO.txt"
 

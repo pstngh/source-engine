@@ -41,8 +41,10 @@ it also works when invoked by an absolute path or from Finder. The included
 
 The build bundles the Homebrew libraries it uses, rewrites every packaged
 Mach-O dependency to a relative path, and applies an ad-hoc signature after
-relocation. It does not depend on paths from the GitHub Actions build machine or
-require Homebrew on the Mac running the downloaded artifact.
+relocation. This includes SDL3, which Homebrew's SDL2 compatibility library
+loads dynamically. The launcher wrapper exposes the private runtime-library
+directory before starting the game. The artifact does not depend on paths from
+the GitHub Actions build machine or require Homebrew on the destination Mac.
 
 The artifact contains engine and game-code binaries only. It does not include
 Valve's copyrighted Counter-Strike: Source game assets. A legally owned game
