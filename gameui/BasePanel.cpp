@@ -1095,6 +1095,28 @@ void CBasePanel::PaintBackground()
 		surface()->DrawSetColor(0, 0, 0, m_flBackgroundFillAlpha);
 		surface()->DrawFilledRect(0, 0, swide, stall);
 	}
+
+#if defined( __APPLE__ )
+	// Launch with -gameui_drawtest to prove that the active GameUI module can
+	// render both an untextured VGUI primitive and a glyph atlas over the menu.
+	if ( CommandLine()->CheckParm( "-gameui_drawtest" ) )
+	{
+		surface()->DrawSetColor( 255, 0, 255, 255 );
+		surface()->DrawFilledRect( 24, 24, 392, 88 );
+
+		IScheme *pDiagnosticScheme =
+			vgui::scheme()->GetIScheme( vgui::scheme()->GetScheme( "SourceScheme" ) );
+		if ( pDiagnosticScheme )
+		{
+			HFont hDiagnosticFont = pDiagnosticScheme->GetFont( "MenuLarge" );
+			const wchar_t *pDiagnosticText = L"GAMEUI DRAW TEST";
+			surface()->DrawSetTextFont( hDiagnosticFont );
+			surface()->DrawSetTextColor( 0, 0, 0, 255 );
+			surface()->DrawSetTextPos( 40, 44 );
+			surface()->DrawPrintText( pDiagnosticText, wcslen( pDiagnosticText ) );
+		}
+	}
+#endif
 }
 
 //-----------------------------------------------------------------------------

@@ -1656,6 +1656,15 @@ void CEngineVGui::Simulate()
 			pRenderContext->Viewport( 0, 0, w, h );
 		}
 
+#if defined( __APPLE__ )
+		static bool s_bLoggedGameUIRunFrameDispatch = false;
+		if ( !s_bLoggedGameUIRunFrameDispatch )
+		{
+			s_bLoggedGameUIRunFrameDispatch = true;
+			Msg( "EngineVGui diagnostic: dispatching GameUI RunFrame.\n" );
+		}
+#endif
+
 		staticGameUIFuncs->RunFrame();
 		vgui::ivgui()->RunFrame();
 

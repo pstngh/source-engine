@@ -215,6 +215,10 @@ void CGameUI::Initialize( CreateInterfaceFn factory )
 	staticPanel->SetMouseInputEnabled( false );
 	staticPanel->SetKeyBoardInputEnabled( false );
 	staticPanel->SetParent(rootpanel);
+
+#if defined( __APPLE__ )
+	Msg( "GameUI diagnostic: initialized macOS GameUI module.\n" );
+#endif
 }
 
 void CGameUI::PostInit()
@@ -796,6 +800,15 @@ void CGameUI::OnGameUIHidden()
 //-----------------------------------------------------------------------------
 void CGameUI::RunFrame()
 {
+#if defined( __APPLE__ )
+	static bool s_bLoggedFirstRunFrame = false;
+	if ( !s_bLoggedFirstRunFrame )
+	{
+		s_bLoggedFirstRunFrame = true;
+		Msg( "GameUI diagnostic: entered CGameUI::RunFrame.\n" );
+	}
+#endif
+
 	if ( IsX360() && m_bOpenProgressOnStart )
 	{
 		StartProgressBar();

@@ -123,7 +123,20 @@ for gameui_module in "$install_prefix/bin/GameUI.dylib" "$install_prefix/bin/lib
 		echo "The Apple Silicon GameUI bootstrap is missing from $gameui_module." >&2
 		exit 1
 	fi
+	if ! strings "$gameui_module" | grep -Fq "GameUI diagnostic: initialized macOS GameUI module"; then
+		echo "The macOS GameUI diagnostic is missing from $gameui_module." >&2
+		exit 1
+	fi
+	if ! strings "$gameui_module" | grep -Fq -- "-gameui_drawtest"; then
+		echo "The macOS GameUI draw test is missing from $gameui_module." >&2
+		exit 1
+	fi
 done
+
+if ! strings "$install_prefix/bin/libengine.dylib" | grep -Fq "EngineVGui diagnostic: dispatching GameUI RunFrame"; then
+	echo "The macOS EngineVGui diagnostic is missing from libengine.dylib." >&2
+	exit 1
+fi
 
 {
 	echo "Source Engine Counter-Strike: Source build"
