@@ -47,6 +47,14 @@ export MACOSX_DEPLOYMENT_TARGET="${MACOSX_DEPLOYMENT_TARGET:-11.0}"
 
 ./waf install -j "$jobs"
 
+launcher_script="$install_prefix/launch-cstrike.command"
+{
+	echo '#!/bin/sh'
+	echo "cd \"\$(dirname \"\$0\")\" || exit 1"
+	echo "exec ./hl2_launcher -game cstrike \"\$@\""
+} > "$launcher_script"
+chmod +x "$launcher_script"
+
 if [ ! -d "$install_prefix/cstrike/bin" ]; then
 	echo "Counter-Strike: Source client/server output was not installed." >&2
 	exit 1

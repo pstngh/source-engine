@@ -25,6 +25,10 @@
 #include <dlfcn.h>
 #include <limits.h>
 #include <string.h>
+#include <unistd.h>
+#ifdef OSX
+#include <mach-o/dyld.h>
+#endif
 #define MAX_PATH PATH_MAX
 #endif
 
@@ -214,8 +218,46 @@ static void WaitForDebuggerConnect( int argc, char *argv[], int time )
 
 #endif // !LINUX
 
+#if defined( OSX )
+static bool SetWorkingDirectoryToExecutable( char *pExecutablePath, size_t executablePathSize )
+{
+	char unresolvedPath[ PATH_MAX ];
+	uint32_t unresolvedPathSize = sizeof( unresolvedPath );
+	if ( _NSGetExecutablePath( unresolvedPath, &unresolvedPathSize ) != 0 )
+		return false;
+
+	if ( !realpath( unresolvedPath, pExecutablePath ) )
+	{
+		if ( strlen( unresolvedPath ) >= executablePathSize )
+			return false;
+
+		strcpy( pExecutablePath, unresolvedPath );
+	}
+
+	char *pLastSlash = strrchr( pExecutablePath, '/' );
+	if ( !pLastSlash )
+		return false;
+
+	*pLastSlash = '\0';
+	const int result = chdir( pExecutablePath );
+	*pLastSlash = '/';
+	return result == 0;
+}
+#endif
+
 int main( int argc, char *argv[] )
 {
+	const char *pRestartPath = argv[0];
+#if defined( OSX )
+	char executablePath[ PATH_MAX ];
+	if ( !SetWorkingDirectoryToExecutable( executablePath, sizeof( executablePath ) ) )
+	{
+		fprintf( stderr, "Failed to resolve the launcher directory\n" );
+		return 1;
+	}
+	pRestartPath = executablePath;
+#endif
+
 	char ld_path[4196];
 	char *path = "bin/";
 	char *ld_env;
@@ -232,7 +274,7 @@ int main( int argc, char *argv[] )
 	if( getenv("NO_EXECVE_AGAIN") == NULL )
 	{
 		setenv("NO_EXECVE_AGAIN", "1", 1);
-		execve(argv[0], argv, environ);
+		execve(pRestartPath, argv, environ);
 	}
 
 	void *launcher = dlopen( "bin/liblauncher" DLL_EXT_STRING, RTLD_NOW );
