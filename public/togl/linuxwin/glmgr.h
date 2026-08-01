@@ -2216,7 +2216,7 @@ FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex )
 			if ( texGLTarget != GL_TEXTURE_1D )
 				gGL->glBindTexture( GL_TEXTURE_1D, 0 );
 			if ( texGLTarget != GL_TEXTURE_2D )
-				gGL->glBindTexture( GL_TEXTURE_2D, 0 );
+				gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
 			if ( texGLTarget != GL_TEXTURE_3D )
 				gGL->glBindTexture( GL_TEXTURE_3D, 0 );
 			if ( texGLTarget != GL_TEXTURE_CUBE_MAP )

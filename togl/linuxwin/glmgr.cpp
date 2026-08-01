@@ -2981,7 +2981,15 @@ void GLMContext::BindTexToTMU( CGLMTex *pTex, int tmu )
 	{
 		const GLenum texGLTarget = pTex->m_texGLTarget;
 		if ( texGLTarget != GL_TEXTURE_1D ) gGL->glBindTexture( GL_TEXTURE_1D, 0 );
-		if ( texGLTarget != GL_TEXTURE_2D ) gGL->glBindTexture( GL_TEXTURE_2D, 0 );
+		#if defined( OSX ) && defined( __aarch64__ )
+			// A linked GLSL program can retain a live sampler2D while D3D state
+			// selects a texture of another target on the same unit. Apple validates
+			// every live sampler target, so keep the complete 2D fallback bound in
+			// parallel with cube/3D textures instead of exposing texture zero.
+			if ( texGLTarget != GL_TEXTURE_2D ) gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
+		#else
+			if ( texGLTarget != GL_TEXTURE_2D ) gGL->glBindTexture( GL_TEXTURE_2D, 0 );
+		#endif
 		if ( texGLTarget != GL_TEXTURE_3D ) gGL->glBindTexture( GL_TEXTURE_3D, 0 );
 		if ( texGLTarget != GL_TEXTURE_CUBE_MAP ) gGL->glBindTexture( GL_TEXTURE_CUBE_MAP, 0 );
 		gGL->glBindTexture( texGLTarget, pTex->m_texName );
