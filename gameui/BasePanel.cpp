@@ -1647,6 +1647,16 @@ void CBasePanel::RunFrame()
 	InvalidateLayout();
 	vgui::GetAnimationController()->UpdateAnimations( engine->Time() );
 
+#if defined( OSX ) && defined( __aarch64__ )
+	// Native Apple Silicon builds may run without Steam platform modules.
+	// The base menu must not wait for that optional module set, or every menu
+	// control remains at its startup alpha.
+	const bool bStandaloneAppleSiliconMenu = true;
+#else
+	const bool bStandaloneAppleSiliconMenu = false;
+#endif
+	bool bInitializedStandaloneMenu = false;
+
 	if ( GameUI().IsConsoleUI() )
 	{
 		// run the console ui animations
@@ -1679,16 +1689,32 @@ void CBasePanel::RunFrame()
 		}
 	}
 
-	UpdateBackgroundState();
-
 	if ( !m_bPlatformMenuInitialized )
 	{
 		// check to see if the platform is ready to load yet
-		if ( IsX360() || g_VModuleLoader.IsPlatformReady() )
+		if ( IsX360() || g_VModuleLoader.IsPlatformReady() || bStandaloneAppleSiliconMenu )
 		{
 			m_bPlatformMenuInitialized = true;
+			bInitializedStandaloneMenu = bStandaloneAppleSiliconMenu;
 		}
-	} 
+	}
+
+	UpdateBackgroundState();
+
+	if ( bInitializedStandaloneMenu )
+	{
+		// Skip the Steam-dependent startup fade and expose the already-created
+		// GameUI controls immediately.  Later dialog/menu transitions still use
+		// the normal visibility and animation code.
+		m_bFadingInMenus = false;
+		SetMenuAlpha( 255 );
+		UpdateGameMenus();
+
+		int x, y, wide, tall;
+		m_pGameMenu->GetBounds( x, y, wide, tall );
+		Msg( "GameUI: standalone Apple Silicon menu enabled (%d items, alpha %d, visible %d, bounds %d %d %d %d).\n",
+			m_pGameMenu->GetItemCount(), m_pGameMenu->GetAlpha(), m_pGameMenu->IsVisible(), x, y, wide, tall );
+	}
 
 	// Check to see if a pending async task has already finished
 	if ( m_pAsyncJob && !m_pAsyncJob->m_hThreadHandle )
