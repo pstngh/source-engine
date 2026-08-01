@@ -80,6 +80,11 @@ export SDL2_RUNTIME_PREFIX="$sdl_prefix"
 
 ./waf install -j "$jobs"
 
+# The filesystem probes the unprefixed module name first.  Ship the verified
+# GameUI under both names so merged standalone installs cannot load a stale
+# GameUI.dylib ahead of libGameUI.dylib.
+cp -p "$install_prefix/bin/libGameUI.dylib" "$install_prefix/bin/GameUI.dylib"
+
 launcher_script="$install_prefix/launch-cstrike.command"
 {
 	echo '#!/bin/sh'
@@ -113,10 +118,12 @@ find "$install_prefix" -type f -print | while IFS= read -r candidate; do
 	fi
 done
 
-if ! strings "$install_prefix/bin/libGameUI.dylib" | grep -Fq "GameUI: standalone Apple Silicon menu enabled"; then
-	echo "The Apple Silicon GameUI bootstrap was not compiled into libGameUI.dylib." >&2
-	exit 1
-fi
+for gameui_module in "$install_prefix/bin/GameUI.dylib" "$install_prefix/bin/libGameUI.dylib"; do
+	if ! strings "$gameui_module" | grep -Fq "GameUI: standalone Apple Silicon menu enabled"; then
+		echo "The Apple Silicon GameUI bootstrap is missing from $gameui_module." >&2
+		exit 1
+	fi
+done
 
 {
 	echo "Source Engine Counter-Strike: Source build"
