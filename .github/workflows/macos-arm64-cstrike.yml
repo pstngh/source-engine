@@ -2,8 +2,6 @@ name: Counter-Strike Source - macOS arm64
 
 on:
   push:
-    branches:
-      - master
   pull_request:
   workflow_dispatch:
 

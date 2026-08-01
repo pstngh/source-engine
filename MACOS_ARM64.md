@@ -1,14 +1,14 @@
 # Counter-Strike: Source on Apple Silicon
 
-The `Counter-Strike Source - macOS arm64` GitHub Actions workflow builds the
-`cstrike` client and server, verifies that every generated Mach-O file is
-arm64-only, and uploads a permission-preserving `.tar.gz` build artifact.
+The repository's only GitHub Actions workflow builds the `cstrike` client and
+server for macOS on Apple Silicon. It verifies that every generated Mach-O file
+is arm64-only and uploads a permission-preserving `.tar.gz` build artifact.
 
 ## GitHub Actions
 
 Open the repository's **Actions** tab, select **Counter-Strike Source - macOS
-arm64**, and choose **Run workflow**. The workflow also runs on pushes to
-`master` and on pull requests. Download the
+arm64**, and choose **Run workflow**. The workflow also runs on every push and
+pull request. Download the
 `counter-strike-source-macos-arm64-<commit>.tar.gz` artifact after the build
 finishes.
 
