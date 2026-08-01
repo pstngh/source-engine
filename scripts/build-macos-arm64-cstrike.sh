@@ -138,6 +138,11 @@ if ! strings "$install_prefix/bin/libengine.dylib" | grep -Fq "EngineVGui diagno
 	exit 1
 fi
 
+if ! strings "$install_prefix/bin/libtogl.dylib" | grep -Fq "Apple ARM64 sampler fallback texture enabled"; then
+	echo "The Apple Silicon sampler fallback is missing from libtogl.dylib." >&2
+	exit 1
+fi
+
 {
 	echo "Source Engine Counter-Strike: Source build"
 	echo "Git commit: $(git rev-parse HEAD)"
