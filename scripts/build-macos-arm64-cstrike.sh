@@ -60,6 +60,8 @@ if [ ! -d "$install_prefix/cstrike/bin" ]; then
 	exit 1
 fi
 
+bash scripts/relocate-macos-binaries.sh "$install_prefix"
+
 mach_o_count=$(find "$install_prefix" -type f -exec file {} \; | awk '/Mach-O/ { count++ } END { print count + 0 }')
 if [ "$mach_o_count" -eq 0 ]; then
 	echo "The build produced no Mach-O binaries." >&2
@@ -84,6 +86,8 @@ done
 	echo "Build type: release"
 	echo "Game: cstrike"
 	echo "Mach-O files: $mach_o_count"
+	echo "Runtime libraries: bundled and relocatable"
+	echo "Code signature: ad hoc"
 } > "$install_prefix/BUILD-INFO.txt"
 
 echo "Apple Silicon Counter-Strike: Source build installed to $install_prefix"

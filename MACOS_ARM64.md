@@ -39,7 +39,11 @@ The launcher now resolves `bin/launcher.dylib` relative to its own location, so
 it also works when invoked by an absolute path or from Finder. The included
 `launch-cstrike.command` wrapper supplies `-game cstrike` automatically.
 
+The build bundles the Homebrew libraries it uses, rewrites every packaged
+Mach-O dependency to a relative path, and applies an ad-hoc signature after
+relocation. It does not depend on paths from the GitHub Actions build machine or
+require Homebrew on the Mac running the downloaded artifact.
+
 The artifact contains engine and game-code binaries only. It does not include
 Valve's copyrighted Counter-Strike: Source game assets. A legally owned game
-installation is still required, along with the Homebrew runtime libraries
-installed by the script.
+installation is still required.

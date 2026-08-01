@@ -37,6 +37,8 @@ jobs:
         shell: bash
         run: |
           cat "$BUILD_PREFIX/BUILD-INFO.txt"
+          echo "Relocated launcher dependencies:"
+          otool -L "$BUILD_PREFIX/bin/liblauncher.dylib"
           find "$BUILD_PREFIX" -type f -print | sort
           tar -C "$(dirname "$BUILD_PREFIX")" -czf "$RUNNER_TEMP/$ARTIFACT_NAME" "$(basename "$BUILD_PREFIX")"
           shasum -a 256 "$RUNNER_TEMP/$ARTIFACT_NAME"
