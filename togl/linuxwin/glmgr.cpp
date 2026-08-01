@@ -2699,8 +2699,21 @@ GLMContext::GLMContext( IDirect3DDevice9 *pDevice, GLMDisplayParams *params )
 	
 	m_attribWriteMode = eAttribWriteDirty;
 
+#if defined( OSX ) && defined( __aarch64__ )
+	// Apple's ARM64 OpenGL compatibility layer is sensitive to stale vertex
+	// attribute bindings. Prefer correctness over the old NVIDIA-era cache.
+	m_attribWriteMode = eAttribWriteAll;
+#endif
+
 	if (CommandLine()->FindParm("-glmwriteallattribs"))				m_attribWriteMode = eAttribWriteAll;
 	if (CommandLine()->FindParm("-glmwritedirtyattribs"))			m_attribWriteMode = eAttribWriteDirty;	
+
+#if defined( OSX ) && defined( __aarch64__ )
+	if ( m_attribWriteMode == eAttribWriteAll )
+	{
+		GLMDebugPrintf( "Apple ARM64 full vertex attribute writes enabled.\n" );
+	}
+#endif
 
 	m_pairCache	= new CGLMShaderPairCache( this );
 	m_pBoundPair = NULL;

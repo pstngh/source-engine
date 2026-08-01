@@ -1570,7 +1570,8 @@ class GLMContext
 				m_nBoundGLBuffer[kGLMVertexBuffer] = nGLName;
 				gGL->glBindBufferARB( GL_ARRAY_BUFFER_ARB, nGLName );
 			}
-			else if ( ( curAttribs.m_pPtr == pBuf ) && 
+			else if ( ( m_attribWriteMode == eAttribWriteDirty ) &&
+					  ( curAttribs.m_pPtr == pBuf ) &&
 					  ( curAttribs.m_revision == nRevision ) &&
 				( curAttribs.m_stride == stride ) &&
 				( curAttribs.m_datatype == datatype ) &&

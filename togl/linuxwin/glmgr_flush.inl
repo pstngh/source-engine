@@ -489,10 +489,10 @@ FORCEINLINE void GLMContext::FlushDrawStates( uint nStartIndex, uint nEndIndex, 
 
 	// If any of these inputs have changed, we need to enumerate through all of the expected GL vertex attribs and modify anything in the GL layer that have changed.
 	// This is not always a win, but it is a net win on NVidia (by 1-4.8% depending on whether driver threading is enabled).
-	if ( ( nCurTotalBufferRevision != m_CurAttribs.m_nTotalBufferRevision ) ||
+	if ( ( m_attribWriteMode == eAttribWriteAll ) ||
+		( nCurTotalBufferRevision != m_CurAttribs.m_nTotalBufferRevision ) ||
 		( m_CurAttribs.m_pVertDecl != m_pDevice->m_pVertDecl ) ||
-		( m_CurAttribs.m_vtxAttribMap[0] != reinterpret_cast<const uint64 *>(m_pDevice->m_vertexShader->m_vtxAttribMap)[0] ) ||
-		( m_CurAttribs.m_vtxAttribMap[1] != reinterpret_cast<const uint64 *>(m_pDevice->m_vertexShader->m_vtxAttribMap)[1] ) ||
+		( memcmp( m_CurAttribs.m_vtxAttribMap, m_pDevice->m_vertexShader->m_vtxAttribMap, sizeof( m_CurAttribs.m_vtxAttribMap ) ) != 0 ) ||
 		( memcmp( m_CurAttribs.m_streams, m_pDevice->m_streams, sizeof( m_pDevice->m_streams ) ) != 0 ) )
 	{
 		// This branch is taken 52.2% of the time in the L4D2 test1 (long) timedemo.
@@ -503,8 +503,7 @@ FORCEINLINE void GLMContext::FlushDrawStates( uint nStartIndex, uint nEndIndex, 
 
 		m_CurAttribs.m_nTotalBufferRevision = nCurTotalBufferRevision;
 		m_CurAttribs.m_pVertDecl = m_pDevice->m_pVertDecl;
-		m_CurAttribs.m_vtxAttribMap[0] = reinterpret_cast<const uint64 *>(m_pDevice->m_vertexShader->m_vtxAttribMap)[0];
-		m_CurAttribs.m_vtxAttribMap[1] = reinterpret_cast<const uint64 *>(m_pDevice->m_vertexShader->m_vtxAttribMap)[1];
+		memcpy( m_CurAttribs.m_vtxAttribMap, m_pDevice->m_vertexShader->m_vtxAttribMap, sizeof( m_CurAttribs.m_vtxAttribMap ) );
 		memcpy( m_CurAttribs.m_streams, m_pDevice->m_streams, sizeof( m_pDevice->m_streams ) );
 
 		unsigned char *pVertexShaderAttribMap = m_pDevice->m_vertexShader->m_vtxAttribMap;
