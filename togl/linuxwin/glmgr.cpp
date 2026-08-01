@@ -2643,6 +2643,8 @@ GLMContext::GLMContext( IDirect3DDevice9 *pDevice, GLMDisplayParams *params )
 	m_nullTexture2D = 0;
 
 	#if defined( OSX ) && defined( __aarch64__ )
+	if ( CommandLine()->FindParm( "-glmarm64samplerfallback" ) )
+	{
 		// Apple silicon's OpenGL implementation rejects a draw when a live
 		// sampler points at texture zero or an incomplete/stale texture. Source
 		// legitimately leaves unused D3D sampler stages NULL, so keep a complete
@@ -2666,6 +2668,11 @@ GLMContext::GLMContext( IDirect3DDevice9 *pDevice, GLMDisplayParams *params )
 		}
 		m_activeTexture = GLM_SAMPLER_COUNT - 1;
 		GLMDebugPrintf( "Apple ARM64 sampler fallback texture enabled.\n" );
+	}
+	else
+	{
+		GLMDebugPrintf( "Apple ARM64 native sampler binding enabled.\n" );
+	}
 	#endif
 					
 	m_texLocks.EnsureCapacity( 16 );	// should be sufficient

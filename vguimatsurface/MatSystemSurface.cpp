@@ -907,8 +907,21 @@ void CMatSystemSurface::InternalSetMaterial( IMaterial *pMaterial, const unsigne
 	{
 		pColor = m_DrawColor;
 	}
-	pMaterial->ColorModulate( pColor[0] / 255.0f, pColor[1] / 255.0f, pColor[2] / 255.0f );
-	pMaterial->AlphaModulate( pColor[3] / 255.0f );
+	const float flRed = pColor[0] / 255.0f;
+	const float flGreen = pColor[1] / 255.0f;
+	const float flBlue = pColor[2] / 255.0f;
+	float flCurrentRed, flCurrentGreen, flCurrentBlue;
+	pMaterial->GetColorModulation( &flCurrentRed, &flCurrentGreen, &flCurrentBlue );
+	if ( flCurrentRed != flRed || flCurrentGreen != flGreen || flCurrentBlue != flBlue )
+	{
+		pMaterial->ColorModulate( flRed, flGreen, flBlue );
+	}
+
+	const float flAlpha = pColor[3] / 255.0f;
+	if ( pMaterial->GetAlphaModulation() != flAlpha )
+	{
+		pMaterial->AlphaModulate( flAlpha );
+	}
 #endif
 
 	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );

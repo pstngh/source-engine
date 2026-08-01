@@ -2194,6 +2194,8 @@ FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex )
 { 
 	Assert( sampler < GLM_SAMPLER_COUNT );
 	#if defined( OSX ) && defined( __aarch64__ )
+	if ( m_nullTexture2D )
+	{
 		// Apple's Metal-backed OpenGL validates every live sampler in a linked
 		// shader. Replace all target bindings together and route NULL through the
 		// complete fallback texture maintained by BindTexToTMU.
@@ -2224,7 +2226,10 @@ FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex )
 				gGL->glBindTexture( GL_TEXTURE_CUBE_MAP, 0 );
 			gGL->glBindTexture( texGLTarget, tex->m_texName );
 		}
-	#else
+	}
+	else
+	#endif
+	{
 	m_samplers[sampler].m_pBoundTex = tex;
 	if ( tex )
 	{
@@ -2243,7 +2248,7 @@ FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex )
 				gGL->glBindMultiTextureEXT( GL_TEXTURE0 + sampler, tex->m_texGLTarget, tex->m_texName );
 			}
 	}
-	#endif
+	}
 	
 	if ( !m_bUseSamplerObjects )
 	{
