@@ -113,6 +113,11 @@ find "$install_prefix" -type f -print | while IFS= read -r candidate; do
 	fi
 done
 
+if ! strings "$install_prefix/bin/libGameUI.dylib" | grep -Fq "GameUI: standalone Apple Silicon menu enabled"; then
+	echo "The Apple Silicon GameUI bootstrap was not compiled into libGameUI.dylib." >&2
+	exit 1
+fi
+
 {
 	echo "Source Engine Counter-Strike: Source build"
 	echo "Git commit: $(git rev-parse HEAD)"

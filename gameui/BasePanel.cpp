@@ -1647,7 +1647,7 @@ void CBasePanel::RunFrame()
 	InvalidateLayout();
 	vgui::GetAnimationController()->UpdateAnimations( engine->Time() );
 
-#if defined( OSX ) && defined( __aarch64__ )
+#if defined( __APPLE__ )
 	// Native Apple Silicon builds may run without Steam platform modules.
 	// The base menu must not wait for that optional module set, or every menu
 	// control remains at its startup alpha.
