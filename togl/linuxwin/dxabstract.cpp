@@ -3685,6 +3685,15 @@ HRESULT IDirect3DDevice9::StretchRect(IDirect3DSurface9* pSourceSurface,CONST RE
 // This returns a mask, since multiple GLSL "varyings" can be tagged with centroid
 static uint32 CentroidMaskFromName( bool bPixelShader, const char *pName )
 {
+	#if defined( OSX ) && defined( __aarch64__ )
+		// The name-based TF2 table below links incompatible masks for several
+		// CS:S shader pairs (for example lightmappedgeneric_vs + shadow_ps).
+		// Apple's GLSL linker does not reliably tolerate the mismatch. Centroid
+		// interpolation is only relevant to multisample edge quality, so prefer a
+		// consistently unqualified interface on Apple silicon.
+		return 0;
+	#endif
+
 	// Important note: This code has been customized for TF2 - don't blindly merge it into other branches!
 	if ( !pName )
 		return 0;

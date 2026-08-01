@@ -1457,21 +1457,21 @@ private:
 
 	FORCEINLINE void SetTransform( D3DTRANSFORMSTATETYPE State, CONST D3DXMATRIX *pMatrix )
 	{
-#if !defined( _X360 )
+#if !defined( _X360 ) && !( defined( OSX ) && defined( __aarch64__ ) )
 		Dx9Device()->SetTransform( State, pMatrix );
 #endif
 	}
 
 	FORCEINLINE void SetLight( DWORD Index, CONST D3DLIGHT9 *pLight )
 	{
-#if !defined( _X360 )
+#if !defined( _X360 ) && !( defined( OSX ) && defined( __aarch64__ ) )
 		Dx9Device()->SetLight( Index, pLight );
 #endif
 	}
 
 	FORCEINLINE void LightEnable( DWORD LightIndex, bool bEnable )
 	{
-#if !defined( _X360 )
+#if !defined( _X360 ) && !( defined( OSX ) && defined( __aarch64__ ) )
 		Dx9Device()->LightEnable( LightIndex, bEnable );
 #endif
 	}

@@ -926,7 +926,17 @@ CGLMTex::CGLMTex( GLMContext *ctx, GLMTexLayout *layout, uint levels, const char
 	#endif
 	
 	//if (pushRenderableSlices || pushTexSlices)
-	if ( !( ( layout->m_key.m_texFlags & kGLMTexMipped ) && ( levels == ( unsigned ) m_layout->m_mipCount ) ) )
+	bool initializeAllSlices = !( ( layout->m_key.m_texFlags & kGLMTexMipped ) && ( levels == ( unsigned ) m_layout->m_mipCount ) );
+
+	// Apple's Metal-backed OpenGL rejects a texture as unloadable if a shader sees
+	// it before every level in the active mip range has storage. Direct3D callers
+	// upload complete mip chains after creation, so allocate the chain up front on
+	// Apple silicon and let the later locks replace the undefined contents.
+	#if defined( OSX ) && defined( __aarch64__ )
+		initializeAllSlices = true;
+	#endif
+
+	if ( initializeAllSlices )
 	{
 		for( int face=0; face <m_layout->m_faceCount; face++)
 		{
@@ -1070,8 +1080,14 @@ void CGLMTex::CalcTexelDataOffsetAndStrides( int sliceIndex, int x, int y, int z
 	}
 	else
 	{
-		yStride = format->m_bytesPerSquareChunk * (m_layout->m_slices[sliceIndex].m_xSize / format->m_chunkSize);
-		zStride = yStride * (m_layout->m_slices[sliceIndex].m_ySize / format->m_chunkSize);
+		// DXT levels smaller than one 4x4 block still occupy one full block.
+		// Returning a zero pitch for the 2x2 and 1x1 mips makes callers overwrite
+		// the same memory and leaves Apple silicon's OpenGL texture incomplete.
+		const int storageX = MAX( m_layout->m_slices[sliceIndex].m_xSize, format->m_chunkSize );
+		const int storageY = MAX( m_layout->m_slices[sliceIndex].m_ySize, format->m_chunkSize );
+
+		yStride = format->m_bytesPerSquareChunk * ( storageX / format->m_chunkSize );
+		zStride = yStride * ( storageY / format->m_chunkSize );
 		
 		// compressed format.  scale the x,y,z values into chunks.
 		// assert if any of them are not multiples of a chunk.
