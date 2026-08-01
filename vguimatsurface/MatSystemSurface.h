@@ -376,7 +376,7 @@ private:
 	};
 
 	// material Setting method 
-	void InternalSetMaterial( IMaterial *material = NULL );
+	void InternalSetMaterial( IMaterial *material = NULL, const unsigned char *pColor = NULL );
 
 	// Draws the fullscreen buffer into the panel
 	void DrawFullScreenBuffer( int nLeft, int nTop, int nRight, int nBottom );

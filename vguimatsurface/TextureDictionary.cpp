@@ -452,6 +452,9 @@ void CMatSystemTexture::SetTextureRGBA( const char *rgba, int wide, int tall, Im
 		KeyValues *pVMTKeyValues = new KeyValues( "UnlitGeneric" );
 		pVMTKeyValues->SetInt( "$vertexcolor", 1 );
 		pVMTKeyValues->SetInt( "$vertexalpha", 1 );
+#if defined( __APPLE__ ) && defined( __aarch64__ )
+		pVMTKeyValues->SetInt( "$vguiuniformcolor", 1 );
+#endif
 		pVMTKeyValues->SetInt( "$ignorez", 1 );
 		pVMTKeyValues->SetInt( "$no_fullbright", 1 );
 		pVMTKeyValues->SetInt( "$translucent", 1 );

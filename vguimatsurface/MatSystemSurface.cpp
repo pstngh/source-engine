@@ -346,6 +346,9 @@ InitReturnVal_t CMatSystemSurface::Init( void )
 	KeyValues *pVMTKeyValues = new KeyValues( "UnlitGeneric" );
 	pVMTKeyValues->SetInt( "$vertexcolor", 1 );
 	pVMTKeyValues->SetInt( "$vertexalpha", 1 );
+#if defined( __APPLE__ ) && defined( __aarch64__ )
+	pVMTKeyValues->SetInt( "$vguiuniformcolor", 1 );
+#endif
 	pVMTKeyValues->SetInt( "$ignorez", 1 );
 	pVMTKeyValues->SetInt( "$no_fullbright", 1 );
 	
@@ -359,6 +362,9 @@ InitReturnVal_t CMatSystemSurface::Init( void )
 	InitFullScreenBuffer( "_rt_FullScreen" );
 
 	m_DrawColor[0] = m_DrawColor[1] = m_DrawColor[2] = m_DrawColor[3] = 255;
+#if defined( __APPLE__ ) && defined( __aarch64__ )
+	Msg( "Apple ARM64 VGUI uniform material color enabled.\n" );
+#endif
 	m_nTranslateX = m_nTranslateY = 0;
 	EnableScissor( false );
 	SetScissorRect( 0, 0, 100000, 100000 );
@@ -887,12 +893,23 @@ void CMatSystemSurface::DrawSetColor(Color col)
 //-----------------------------------------------------------------------------
 // material Setting methods 
 //-----------------------------------------------------------------------------
-void CMatSystemSurface::InternalSetMaterial( IMaterial *pMaterial )
+void CMatSystemSurface::InternalSetMaterial( IMaterial *pMaterial, const unsigned char *pColor )
 {
 	if (!pMaterial)
 	{
 		pMaterial = m_pWhite;
 	}
+#if defined( __APPLE__ ) && defined( __aarch64__ )
+	// VGUI's dynamically-created UnlitGeneric materials lose their vertex-color
+	// input in Apple's OpenGL compatibility layer. Use the shader's uniform
+	// modulation path, which produces the same result for VGUI draw batches.
+	if ( !pColor )
+	{
+		pColor = m_DrawColor;
+	}
+	pMaterial->ColorModulate( pColor[0] / 255.0f, pColor[1] / 255.0f, pColor[2] / 255.0f );
+	pMaterial->AlphaModulate( pColor[3] / 255.0f );
+#endif
 
 	CMatRenderContextPtr pRenderContext( g_pMaterialSystem );
 	m_pMesh = pRenderContext->GetDynamicMesh( true, NULL, NULL, pMaterial );
@@ -2159,7 +2176,7 @@ void CMatSystemSurface::DrawFlushText()
 		MAT_FUNC;
 		
 		IMaterial *pMaterial = TextureDictionary()->GetTextureMaterial(m_iBoundTexture);
-		InternalSetMaterial( pMaterial );
+		InternalSetMaterial( pMaterial, m_DrawTextColor );
 		DrawQuadArray( m_nBatchedCharVertCount / 2, m_BatchedCharVerts, m_DrawTextColor );
 		m_nBatchedCharVertCount = 0;
 	}
@@ -2468,7 +2485,7 @@ void CMatSystemSurface::DrawPrintText(const wchar_t *text, int iTextLen, FontDra
 				if (iCount)
 				{
 					IMaterial *pMaterial = TextureDictionary()->GetTextureMaterial(iLastTexId);
-					InternalSetMaterial( pMaterial );
+					InternalSetMaterial( pMaterial, m_DrawTextColor );
 					DrawQuadArray( iCount, pQuads, m_DrawTextColor, IsPC() );
 					iCount = 0;
 				}
@@ -2511,7 +2528,7 @@ void CMatSystemSurface::DrawPrintText(const wchar_t *text, int iTextLen, FontDra
 	if (iCount)
 	{
 		IMaterial *pMaterial = TextureDictionary()->GetTextureMaterial(iLastTexId);
-		InternalSetMaterial( pMaterial );
+		InternalSetMaterial( pMaterial, m_DrawTextColor );
 		DrawQuadArray( iCount, pQuads, m_DrawTextColor, IsPC() );
 	}
 

@@ -77,6 +77,7 @@ BEGIN_VS_SHADER( UnlitGeneric, "Help for UnlitGeneric" )
 		SHADER_PARAM( DEPTHBLEND, SHADER_PARAM_TYPE_INTEGER, "0", "fade at intersection boundaries" )
 		SHADER_PARAM( DEPTHBLENDSCALE, SHADER_PARAM_TYPE_FLOAT, "50.0", "Amplify or reduce DEPTHBLEND fading. Lower values make harder edges." )
 		SHADER_PARAM( RECEIVEFLASHLIGHT, SHADER_PARAM_TYPE_INTEGER, "0", "Forces this material to receive flashlights." )
+		SHADER_PARAM( VGUIUNIFORMCOLOR, SHADER_PARAM_TYPE_BOOL, "0", "Use uniform material color instead of the VGUI vertex color" )
 
 	END_SHADER_PARAMS
 
@@ -107,6 +108,7 @@ BEGIN_VS_SHADER( UnlitGeneric, "Help for UnlitGeneric" )
 		info.m_nEnvmapSaturation = ENVMAPSATURATION;
 		info.m_nAlphaTestReference = ALPHATESTREFERENCE;
 		info.m_nVertexAlphaTest = VERTEXALPHATEST;
+		info.m_nVGUIUniformColor = VGUIUNIFORMCOLOR;
 		info.m_nFlashlightTexture = FLASHLIGHTTEXTURE;
 		info.m_nFlashlightTextureFrame = FLASHLIGHTTEXTUREFRAME;
 		info.m_nHDRColorScale = HDRCOLORSCALE;
