@@ -1126,6 +1126,13 @@ bool CShaderDeviceMgrDx8::ComputeCapsFromD3D( HardwareCaps_t *pCaps, int nAdapte
 
 	// This may get more complex if we start using multiple flavors of compressed vertex - for now it's "on or off"
 	pCaps->m_SupportsCompressedVertices = ( pCaps->m_nDXSupportLevel >= 90 ) && ( pCaps->m_CanDoSRGBReadFromRTs ) ? VERTEX_COMPRESSION_ON : VERTEX_COMPRESSION_NONE;
+#if defined( OSX ) && defined( __aarch64__ )
+	// TOGL's packed studio-vertex path produces invalid normals and bone data on
+	// Apple Silicon. Build the model vertex buffers in their uncompressed form;
+	// the shaders already provide matching uncompressed variants.
+	pCaps->m_SupportsCompressedVertices = VERTEX_COMPRESSION_NONE;
+	Msg( "Apple ARM64 uncompressed studio vertices enabled.\n" );
+#endif
 	if ( CommandLine()->CheckParm( "-no_compressed_verts" ) )						  // m_CanDoSRGBReadFromRTs limits us to Snow Leopard or later on OSX
 	{
 		pCaps->m_SupportsCompressedVertices = VERTEX_COMPRESSION_NONE;

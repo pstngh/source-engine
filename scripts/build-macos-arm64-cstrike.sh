@@ -91,7 +91,7 @@ launcher_script="$install_prefix/launch-cstrike.command"
 	echo "cd \"\$(dirname \"\$0\")\" || exit 1"
 	echo "runtime_library_dir=\"\$PWD/bin/third_party\""
 	echo "export DYLD_LIBRARY_PATH=\"\$runtime_library_dir\${DYLD_LIBRARY_PATH:+:\$DYLD_LIBRARY_PATH}\""
-	echo "exec ./hl2_launcher -game cstrike \"\$@\""
+	echo "exec ./hl2_launcher -game cstrike -no_compressed_verts \"\$@\""
 } > "$launcher_script"
 chmod +x "$launcher_script"
 
@@ -148,6 +148,11 @@ if ! strings "$install_prefix/bin/libtogl.dylib" | grep -Fq "Apple ARM64 base-ve
 	exit 1
 fi
 
+if ! strings "$install_prefix/bin/libshaderapidx9.dylib" | grep -Fq "Apple ARM64 uncompressed studio vertices enabled"; then
+	echo "The Apple Silicon studio-vertex workaround is missing from libshaderapidx9.dylib." >&2
+	exit 1
+fi
+
 {
 	echo "Source Engine Counter-Strike: Source build"
 	echo "Git commit: $(git rev-parse HEAD)"
@@ -158,6 +163,7 @@ fi
 	echo "Mach-O files: $mach_o_count"
 	echo "Runtime libraries: bundled and relocatable"
 	echo "SDL runtime: native SDL2 $sdl_version"
+	echo "Studio vertices: uncompressed Apple Silicon compatibility path"
 	echo "Code signature: ad hoc"
 } > "$install_prefix/BUILD-INFO.txt"
 
