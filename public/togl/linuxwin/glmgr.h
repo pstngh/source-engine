@@ -1734,7 +1734,6 @@ class GLMContext
 		// texture bindings and sampler setup
 		int								m_activeTexture;		// mirror for glActiveTexture
 		GLMTexSampler					m_samplers[GLM_SAMPLER_COUNT];
-		GLuint							m_nullTexture2D;		// complete 1x1 fallback for unbound samplers on Apple GL
 		
 		uint8							m_nDirtySamplerFlags[GLM_SAMPLER_COUNT];	// 0 if the sampler is dirty, 1 if not
 		uint32							m_nNumDirtySamplers;						// # of unique dirty sampler indices in m_nDirtySamplers
@@ -2192,38 +2191,6 @@ FORCEINLINE void GLMContext::SetSamplerDirty( int sampler )
 FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex ) 
 { 
 	Assert( sampler < GLM_SAMPLER_COUNT );
-	#if defined( OSX ) && defined( __aarch64__ )
-		// Apple's Metal-backed OpenGL validates every live sampler in a linked
-		// shader. Replace all target bindings together and route NULL through the
-		// complete fallback texture maintained by BindTexToTMU.
-		m_samplers[sampler].m_pBoundTex = tex;
-		if ( sampler != m_activeTexture )
-		{
-			gGL->glActiveTexture( GL_TEXTURE0 + sampler );
-			m_activeTexture = sampler;
-		}
-
-		if ( !tex )
-		{
-			gGL->glBindTexture( GL_TEXTURE_1D, 0 );
-			gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
-			gGL->glBindTexture( GL_TEXTURE_3D, 0 );
-			gGL->glBindTexture( GL_TEXTURE_CUBE_MAP, 0 );
-		}
-		else
-		{
-			const GLenum texGLTarget = tex->m_texGLTarget;
-			if ( texGLTarget != GL_TEXTURE_1D )
-				gGL->glBindTexture( GL_TEXTURE_1D, 0 );
-			if ( texGLTarget != GL_TEXTURE_2D )
-				gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
-			if ( texGLTarget != GL_TEXTURE_3D )
-				gGL->glBindTexture( GL_TEXTURE_3D, 0 );
-			if ( texGLTarget != GL_TEXTURE_CUBE_MAP )
-				gGL->glBindTexture( GL_TEXTURE_CUBE_MAP, 0 );
-			gGL->glBindTexture( texGLTarget, tex->m_texName );
-		}
-	#else
 	m_samplers[sampler].m_pBoundTex = tex;
 	if ( tex )
 	{
@@ -2241,8 +2208,7 @@ FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex )
 			{
 				gGL->glBindMultiTextureEXT( GL_TEXTURE0 + sampler, tex->m_texGLTarget, tex->m_texName );
 			}
-	}
-	#endif
+		}
 	
 	if ( !m_bUseSamplerObjects )
 	{

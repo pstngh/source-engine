@@ -2640,33 +2640,6 @@ GLMContext::GLMContext( IDirect3DDevice9 *pDevice, GLMDisplayParams *params )
 	MarkAllSamplersDirty();
 	
 	m_activeTexture = -1;
-	m_nullTexture2D = 0;
-
-	#if defined( OSX ) && defined( __aarch64__ )
-		// Apple silicon's OpenGL implementation rejects a draw when a live
-		// sampler points at texture zero or an incomplete/stale texture. Source
-		// legitimately leaves unused D3D sampler stages NULL, so keep a complete
-		// neutral texture bound for those stages.
-		const uint32 nullTexturePixel = 0xFFFFFFFFU;
-		gGL->glGenTextures( 1, &m_nullTexture2D );
-		gGL->glActiveTexture( GL_TEXTURE0 );
-		gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
-		gGL->glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0 );
-		gGL->glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0 );
-		gGL->glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
-		gGL->glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-		gGL->glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
-		gGL->glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-		gGL->glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &nullTexturePixel );
-
-		for ( int i = 1; i < GLM_SAMPLER_COUNT; ++i )
-		{
-			gGL->glActiveTexture( GL_TEXTURE0 + i );
-			gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
-		}
-		m_activeTexture = GLM_SAMPLER_COUNT - 1;
-		GLMDebugPrintf( "Apple ARM64 sampler fallback texture enabled.\n" );
-	#endif
 					
 	m_texLocks.EnsureCapacity( 16 );	// should be sufficient
 
@@ -2947,12 +2920,6 @@ GLMContext::~GLMContext	()
 
 	PurgeTexCache();
 
-	if ( m_nullTexture2D )
-	{
-		gGL->glDeleteTextures( 1, &m_nullTexture2D );
-		m_nullTexture2D = 0;
-	}
-
 	DecrementWindowRefCount();
 }
 
@@ -2973,7 +2940,7 @@ void GLMContext::BindTexToTMU( CGLMTex *pTex, int tmu )
 	if ( !pTex )
 	{
 		gGL->glBindTexture( GL_TEXTURE_1D, 0 );
-		gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
+		gGL->glBindTexture( GL_TEXTURE_2D, 0 );
 		gGL->glBindTexture( GL_TEXTURE_3D, 0 );
 		gGL->glBindTexture( GL_TEXTURE_CUBE_MAP, 0 );
 	}
@@ -2981,15 +2948,7 @@ void GLMContext::BindTexToTMU( CGLMTex *pTex, int tmu )
 	{
 		const GLenum texGLTarget = pTex->m_texGLTarget;
 		if ( texGLTarget != GL_TEXTURE_1D ) gGL->glBindTexture( GL_TEXTURE_1D, 0 );
-		#if defined( OSX ) && defined( __aarch64__ )
-			// A linked GLSL program can retain a live sampler2D while D3D state
-			// selects a texture of another target on the same unit. Apple validates
-			// every live sampler target, so keep the complete 2D fallback bound in
-			// parallel with cube/3D textures instead of exposing texture zero.
-			if ( texGLTarget != GL_TEXTURE_2D ) gGL->glBindTexture( GL_TEXTURE_2D, m_nullTexture2D );
-		#else
-			if ( texGLTarget != GL_TEXTURE_2D ) gGL->glBindTexture( GL_TEXTURE_2D, 0 );
-		#endif
+		if ( texGLTarget != GL_TEXTURE_2D ) gGL->glBindTexture( GL_TEXTURE_2D, 0 );
 		if ( texGLTarget != GL_TEXTURE_3D ) gGL->glBindTexture( GL_TEXTURE_3D, 0 );
 		if ( texGLTarget != GL_TEXTURE_CUBE_MAP ) gGL->glBindTexture( GL_TEXTURE_CUBE_MAP, 0 );
 		gGL->glBindTexture( texGLTarget, pTex->m_texName );
