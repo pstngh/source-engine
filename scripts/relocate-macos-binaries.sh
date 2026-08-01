@@ -22,7 +22,8 @@ mkdir -p "$runtime_library_dir"
 copy_flag=$(mktemp "${TMPDIR:-/tmp}/source-engine-copy.XXXXXX")
 audit_flag=$(mktemp "${TMPDIR:-/tmp}/source-engine-audit.XXXXXX")
 matches_file=$(mktemp "${TMPDIR:-/tmp}/source-engine-matches.XXXXXX")
-trap 'rm -f "$copy_flag" "$audit_flag" "$matches_file"' EXIT HUP INT TERM
+source_map_file=$(mktemp "${TMPDIR:-/tmp}/source-engine-sources.XXXXXX")
+trap 'rm -f "$copy_flag" "$audit_flag" "$matches_file" "$source_map_file"' EXIT HUP INT TERM
 
 find_macho_files()
 {
@@ -50,6 +51,53 @@ find_packaged_library()
 	fi
 
 	sed -n '1p' "$matches_file"
+}
+
+copy_homebrew_library()
+{
+	source_dependency=$1
+	if [ ! -f "$source_dependency" ]; then
+		echo "Missing Homebrew runtime library: $source_dependency" >&2
+		return 1
+	fi
+
+	target="$runtime_library_dir/$(basename -- "$source_dependency")"
+	if [ ! -f "$target" ]; then
+		cp -pL "$source_dependency" "$target"
+		chmod u+w "$target"
+		printf '%s\t%s\n' "$target" "$(dirname -- "$source_dependency")" >> "$source_map_file"
+		touch "$copy_flag"
+	fi
+
+	printf '%s\n' "$target"
+}
+
+resolve_rpath_dependency()
+{
+	rpath_candidate=$1
+	rpath_dependency=$2
+	library_name=$(basename -- "$rpath_dependency")
+	find "$install_root" -type f -name "$library_name" -print > "$matches_file"
+	match_count=$(wc -l < "$matches_file" | tr -d ' ')
+
+	if [ "$match_count" -eq 1 ]; then
+		sed -n '1p' "$matches_file"
+		return
+	fi
+
+	if [ "$match_count" -gt 1 ]; then
+		echo "Expected at most one packaged copy of $library_name, found $match_count." >&2
+		return 1
+	fi
+
+	source_dir=$(awk -F '\t' -v candidate="$rpath_candidate" '$1 == candidate { print $2; exit }' "$source_map_file")
+	if [ -z "$source_dir" ]; then
+		echo "Cannot locate the Homebrew source for $rpath_dependency from $rpath_candidate." >&2
+		return 1
+	fi
+
+	source_dependency="$source_dir/${rpath_dependency#@rpath/}"
+	copy_homebrew_library "$source_dependency"
 }
 
 relative_from_loader()
@@ -106,21 +154,11 @@ while :; do
 					rewrite_dependency "$candidate" "$dependency" "$target"
 					;;
 				"$brew_prefix"/*)
-					if [ ! -f "$dependency" ]; then
-						echo "Missing Homebrew runtime library: $dependency" >&2
-						exit 1
-					fi
-
-					target="$runtime_library_dir/$(basename -- "$dependency")"
-					if [ ! -f "$target" ]; then
-						cp -pL "$dependency" "$target"
-						chmod u+w "$target"
-						touch "$copy_flag"
-					fi
+					target=$(copy_homebrew_library "$dependency")
 					rewrite_dependency "$candidate" "$dependency" "$target"
 					;;
 				@rpath/*)
-					target=$(find_packaged_library "$dependency")
+					target=$(resolve_rpath_dependency "$candidate" "$dependency")
 					rewrite_dependency "$candidate" "$dependency" "$target"
 					;;
 				*)
