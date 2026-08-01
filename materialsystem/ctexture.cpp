@@ -3134,6 +3134,25 @@ bool CTexture::SetupDebuggingTextures( IVTFTexture *pVTFTexture )
 {
 	tmZone( TELEMETRY_LEVEL0, TMZF_NONE, "%s", __FUNCTION__ );
 
+#if defined( OSX ) && defined( __aarch64__ )
+	// The Apple Silicon build can observe stale/corrupted material-system debug
+	// configuration even when the corresponding console variables report zero.
+	// Applying the debug override here permanently replaces every uploaded mip
+	// with diagnostic solid colors until the texture is reconstructed. Keep
+	// production ARM64 texture uploads faithful to their VTF data; developers can
+	// still opt in explicitly when diagnosing mip selection.
+	if ( !CommandLine()->CheckParm( "-allow_debug_textures" ) )
+	{
+		static bool s_bLoggedDebugTextureClamp = false;
+		if ( !s_bLoggedDebugTextureClamp )
+		{
+			Msg( "Apple ARM64 debug texture overrides disabled.\n" );
+			s_bLoggedDebugTextureClamp = true;
+		}
+		return false;
+	}
+#endif
+
 	if ( pVTFTexture->Flags() & TEXTUREFLAGS_NODEBUGOVERRIDE )
 		return false;
 

@@ -153,6 +153,11 @@ if ! strings "$install_prefix/bin/libshaderapidx9.dylib" | grep -Fq "Apple ARM64
 	exit 1
 fi
 
+if ! strings "$install_prefix/bin/libmaterialsystem.dylib" | grep -Fq "Apple ARM64 debug texture overrides disabled"; then
+	echo "The Apple Silicon debug-texture clamp is missing from libmaterialsystem.dylib." >&2
+	exit 1
+fi
+
 {
 	echo "Source Engine Counter-Strike: Source build"
 	echo "Git commit: $(git rev-parse HEAD)"
@@ -164,6 +169,7 @@ fi
 	echo "Runtime libraries: bundled and relocatable"
 	echo "SDL runtime: native SDL2 $sdl_version"
 	echo "Studio vertices: uncompressed Apple Silicon compatibility path"
+	echo "Debug texture overrides: disabled by default on Apple Silicon"
 	echo "Code signature: ad hoc"
 } > "$install_prefix/BUILD-INFO.txt"
 
