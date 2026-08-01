@@ -1734,6 +1734,7 @@ class GLMContext
 		// texture bindings and sampler setup
 		int								m_activeTexture;		// mirror for glActiveTexture
 		GLMTexSampler					m_samplers[GLM_SAMPLER_COUNT];
+		GLuint							m_nullTexture2D;		// complete 1x1 fallback for unbound samplers on Apple GL
 		
 		uint8							m_nDirtySamplerFlags[GLM_SAMPLER_COUNT];	// 0 if the sampler is dirty, 1 if not
 		uint32							m_nNumDirtySamplers;						// # of unique dirty sampler indices in m_nDirtySamplers
@@ -2191,6 +2192,12 @@ FORCEINLINE void GLMContext::SetSamplerDirty( int sampler )
 FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex ) 
 { 
 	Assert( sampler < GLM_SAMPLER_COUNT );
+	#if defined( OSX ) && defined( __aarch64__ )
+		// Apple's Metal-backed OpenGL validates every live sampler in a linked
+		// shader. Replace all target bindings together and route NULL through the
+		// complete fallback texture maintained by BindTexToTMU.
+		BindTexToTMU( tex, sampler );
+	#else
 	m_samplers[sampler].m_pBoundTex = tex;
 	if ( tex )
 	{
@@ -2208,7 +2215,8 @@ FORCEINLINE void GLMContext::SetSamplerTex( int sampler, CGLMTex *tex )
 			{
 				gGL->glBindMultiTextureEXT( GL_TEXTURE0 + sampler, tex->m_texGLTarget, tex->m_texName );
 			}
-		}
+	}
+	#endif
 	
 	if ( !m_bUseSamplerObjects )
 	{

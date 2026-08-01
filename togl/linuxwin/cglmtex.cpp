@@ -623,8 +623,8 @@ GLMTexLayout *CGLMTexLayoutTable::NewLayoutRef( GLMTexLayoutKey *pDesiredKey )
 				//	slicePtr->m_ySize = (slicePtr->m_ySize+3) & (~3);
 				//}
 				
-				int xchunks = (storage_x / formatDesc->m_chunkSize );
-				int ychunks = (storage_y / formatDesc->m_chunkSize );
+				int xchunks = ( storage_x + formatDesc->m_chunkSize - 1 ) / formatDesc->m_chunkSize;
+				int ychunks = ( storage_y + formatDesc->m_chunkSize - 1 ) / formatDesc->m_chunkSize;
 				
 				slicePtr->m_storageSize = (xchunks * ychunks * formatDesc->m_bytesPerSquareChunk) * storage_z;				
 				slicePtr->m_storageOffset = storageOffset;
@@ -1083,11 +1083,11 @@ void CGLMTex::CalcTexelDataOffsetAndStrides( int sliceIndex, int x, int y, int z
 		// DXT levels smaller than one 4x4 block still occupy one full block.
 		// Returning a zero pitch for the 2x2 and 1x1 mips makes callers overwrite
 		// the same memory and leaves Apple silicon's OpenGL texture incomplete.
-		const int storageX = MAX( m_layout->m_slices[sliceIndex].m_xSize, format->m_chunkSize );
-		const int storageY = MAX( m_layout->m_slices[sliceIndex].m_ySize, format->m_chunkSize );
+		const int xChunks = ( m_layout->m_slices[sliceIndex].m_xSize + format->m_chunkSize - 1 ) / format->m_chunkSize;
+		const int yChunks = ( m_layout->m_slices[sliceIndex].m_ySize + format->m_chunkSize - 1 ) / format->m_chunkSize;
 
-		yStride = format->m_bytesPerSquareChunk * ( storageX / format->m_chunkSize );
-		zStride = yStride * ( storageY / format->m_chunkSize );
+		yStride = format->m_bytesPerSquareChunk * xChunks;
+		zStride = yStride * yChunks;
 		
 		// compressed format.  scale the x,y,z values into chunks.
 		// assert if any of them are not multiples of a chunk.
