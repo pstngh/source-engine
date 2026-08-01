@@ -16,6 +16,7 @@ install_root=$(CDPATH='' cd -- "$1" && pwd)
 script_dir=$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)
 repo_root=$(CDPATH='' cd -- "$script_dir/.." && pwd)
 brew_prefix=$(brew --prefix)
+runtime_prefix=${SDL2_RUNTIME_PREFIX:-$brew_prefix}
 runtime_library_dir="$install_root/bin/third_party"
 mkdir -p "$runtime_library_dir"
 
@@ -59,7 +60,7 @@ copy_homebrew_library()
 {
 	source_dependency=$1
 	if [ ! -f "$source_dependency" ]; then
-		echo "Missing Homebrew runtime library: $source_dependency" >&2
+		echo "Missing runtime library: $source_dependency" >&2
 		return 1
 	fi
 
@@ -134,11 +135,6 @@ rewrite_dependency()
 	install_name_tool -change "$old_dependency" "$new_dependency" "$candidate"
 }
 
-# Homebrew's SDL2 compatibility layer opens this leaf name with dlopen(), so it
-# does not appear in otool output and must be seeded explicitly.
-sdl3_library="$(brew --prefix sdl3)/lib/libSDL3.dylib"
-copy_homebrew_library "$sdl3_library" > /dev/null
-
 # Repeat until every newly copied Homebrew library has had its own transitive
 # dependencies copied and rewritten as well.
 while :; do
@@ -161,6 +157,10 @@ while :; do
 					rewrite_dependency "$candidate" "$dependency" "$target"
 					;;
 				"$brew_prefix"/*)
+					target=$(copy_homebrew_library "$dependency")
+					rewrite_dependency "$candidate" "$dependency" "$target"
+					;;
+				"$runtime_prefix"/*)
 					target=$(copy_homebrew_library "$dependency")
 					rewrite_dependency "$candidate" "$dependency" "$target"
 					;;
@@ -262,7 +262,7 @@ int main(int argc, char **argv)
 	}
 
 	get_version(&version);
-	printf("SDL compatibility runtime loaded: %u.%u.%u\n",
+	printf("Native SDL2 runtime loaded: %u.%u.%u\n",
 	       (unsigned int)version.major,
 	       (unsigned int)version.minor,
 	       (unsigned int)version.patch);
@@ -275,4 +275,4 @@ clang -arch arm64 -Wall -Wextra -Werror -x c "$probe_source" -o "$probe_binary"
 DYLD_LIBRARY_PATH="$runtime_library_dir${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}" \
 	"$probe_binary" "$runtime_library_dir/libSDL2-2.0.0.dylib"
 
-echo "Bundled Homebrew libraries and converted Mach-O dependencies to portable paths."
+echo "Bundled runtime libraries and converted Mach-O dependencies to portable paths."
