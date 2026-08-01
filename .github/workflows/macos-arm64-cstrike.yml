@@ -1,0 +1,52 @@
+name: Counter-Strike Source - macOS arm64
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-arm64-cstrike-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Counter-Strike Source (Apple Silicon)
+    runs-on: macos-15
+    timeout-minutes: 90
+
+    env:
+      BUILD_PREFIX: out/cstrike-macos-arm64
+      ARTIFACT_NAME: counter-strike-source-macos-arm64-${{ github.sha }}.tar.gz
+      HOMEBREW_NO_AUTO_UPDATE: "1"
+
+    steps:
+      - name: Check out sources and dependencies
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: recursive
+
+      - name: Build release binaries
+        shell: bash
+        run: bash scripts/build-macos-arm64-cstrike.sh
+
+      - name: Package Apple Silicon build
+        shell: bash
+        run: |
+          cat "$BUILD_PREFIX/BUILD-INFO.txt"
+          find "$BUILD_PREFIX" -type f -print | sort
+          tar -C "$(dirname "$BUILD_PREFIX")" -czf "$RUNNER_TEMP/$ARTIFACT_NAME" "$(basename "$BUILD_PREFIX")"
+          shasum -a 256 "$RUNNER_TEMP/$ARTIFACT_NAME"
+
+      - name: Upload Apple Silicon build
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: ${{ runner.temp }}/${{ env.ARTIFACT_NAME }}
+          archive: false
+          if-no-files-found: error
+          retention-days: 14
