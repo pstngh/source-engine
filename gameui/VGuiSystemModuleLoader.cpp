@@ -138,7 +138,13 @@ bool CVGuiSystemModuleLoader::LoadPlatformModules(CreateInterfaceFn *factorylist
 	if (!kv->LoadFromFile(g_pFullFileSystem, "steam/games/PlatformMenu.vdf", "PLATFORM"))
 	{
 		kv->deleteThis();
-		return false;
+
+		// Standalone installs do not necessarily ship Steam's optional platform
+		// menu definition. Treat that as an empty, initialized module set so the
+		// base GameUI can finish startup and reveal the main menu.
+		// Leaving this false keeps every menu control at alpha zero forever.
+		m_bModulesInitialized = true;
+		return true;
 	}
 
 	// walk the platform menu loading all the interfaces
