@@ -2643,6 +2643,7 @@ GLMContext::GLMContext( IDirect3DDevice9 *pDevice, GLMDisplayParams *params )
 	m_nullTexture2D = 0;
 
 	#if defined( OSX ) && defined( __aarch64__ )
+	GLMDebugPrintf( "Apple ARM64 base-vertex pointer emulation enabled.\n" );
 	if ( CommandLine()->FindParm( "-glmarm64samplerfallback" ) )
 	{
 		// Apple silicon's OpenGL implementation rejects a draw when a live
@@ -5232,7 +5233,11 @@ void GLMContext::DrawRangeElementsNonInline( GLenum mode, GLuint start, GLuint e
 
 	if ( m_pBoundPair )
 	{
+	#if defined( OSX ) && defined( __aarch64__ )
+		gGL->glDrawRangeElements( mode, start, end, count, type, indicesActual );
+	#else
 		gGL->glDrawRangeElementsBaseVertex( mode, start, end, count, type, indicesActual, baseVertex );
+	#endif
 
 #if GLMDEBUG
 		if ( m_slowCheckEnable )

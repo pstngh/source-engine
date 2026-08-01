@@ -490,6 +490,9 @@ FORCEINLINE void GLMContext::FlushDrawStates( uint nStartIndex, uint nEndIndex, 
 	// If any of these inputs have changed, we need to enumerate through all of the expected GL vertex attribs and modify anything in the GL layer that have changed.
 	// This is not always a win, but it is a net win on NVidia (by 1-4.8% depending on whether driver threading is enabled).
 	if ( ( m_attribWriteMode == eAttribWriteAll ) ||
+	#if defined( OSX ) && defined( __aarch64__ )
+		( m_CurAttribs.m_nBaseVertex != static_cast< int >( nBaseVertex ) ) ||
+	#endif
 		( nCurTotalBufferRevision != m_CurAttribs.m_nTotalBufferRevision ) ||
 		( m_CurAttribs.m_pVertDecl != m_pDevice->m_pVertDecl ) ||
 		( memcmp( m_CurAttribs.m_vtxAttribMap, m_pDevice->m_vertexShader->m_vtxAttribMap, sizeof( m_CurAttribs.m_vtxAttribMap ) ) != 0 ) ||
@@ -502,6 +505,9 @@ FORCEINLINE void GLMContext::FlushDrawStates( uint nStartIndex, uint nEndIndex, 
 #endif
 
 		m_CurAttribs.m_nTotalBufferRevision = nCurTotalBufferRevision;
+	#if defined( OSX ) && defined( __aarch64__ )
+		m_CurAttribs.m_nBaseVertex = static_cast< int >( nBaseVertex );
+	#endif
 		m_CurAttribs.m_pVertDecl = m_pDevice->m_pVertDecl;
 		memcpy( m_CurAttribs.m_vtxAttribMap, m_pDevice->m_vertexShader->m_vtxAttribMap, sizeof( m_CurAttribs.m_vtxAttribMap ) );
 		memcpy( m_CurAttribs.m_streams, m_pDevice->m_streams, sizeof( m_pDevice->m_streams ) );
@@ -554,6 +560,9 @@ FORCEINLINE void GLMContext::FlushDrawStates( uint nStartIndex, uint nEndIndex, 
 			Assert( pStream->m_vtxBuffer->m_vtxBuffer == pBuf );
 
 			int nBufOffset = pDeclElem->m_gldecl.m_offset + pStream->m_offset;
+	#if defined( OSX ) && defined( __aarch64__ )
+			nBufOffset += static_cast< int >( nBaseVertex ) * static_cast< int >( pStream->m_stride );
+	#endif
 			Assert( nBufOffset >= 0 );
 			Assert( nBufOffset < (int)pBuf->m_nSize );
 			if ( pBuf->m_bUsingPersistentBuffer )

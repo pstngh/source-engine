@@ -143,6 +143,11 @@ if ! strings "$install_prefix/bin/libtogl.dylib" | grep -Fq "Apple ARM64 native 
 	exit 1
 fi
 
+if ! strings "$install_prefix/bin/libtogl.dylib" | grep -Fq "Apple ARM64 base-vertex pointer emulation enabled"; then
+	echo "The Apple Silicon base-vertex emulation path is missing from libtogl.dylib." >&2
+	exit 1
+fi
+
 {
 	echo "Source Engine Counter-Strike: Source build"
 	echo "Git commit: $(git rev-parse HEAD)"

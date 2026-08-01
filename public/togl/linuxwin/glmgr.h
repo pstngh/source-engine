@@ -1594,6 +1594,7 @@ class GLMContext
 		struct CurAttribs_t
 		{
 			uint m_nTotalBufferRevision;
+			int m_nBaseVertex;
 			IDirect3DVertexDeclaration9	*m_pVertDecl;
 			D3DStreamDesc m_streams[ D3D_MAX_STREAMS ];
 			uint64 m_vtxAttribMap[2];
@@ -1604,6 +1605,7 @@ class GLMContext
 		FORCEINLINE void ClearCurAttribs() 
 		{ 
 			m_CurAttribs.m_nTotalBufferRevision = 0;
+			m_CurAttribs.m_nBaseVertex = 0x7FFFFFFF;
 			m_CurAttribs.m_pVertDecl = NULL;
 			memset( m_CurAttribs.m_streams, 0, sizeof( m_CurAttribs.m_streams ) );
 			m_CurAttribs.m_vtxAttribMap[0] = 0xBBBBBBBBBBBBBBBBULL;
@@ -1997,7 +1999,11 @@ FORCEINLINE void GLMContext::DrawRangeElements(	GLenum mode, GLuint start, GLuin
 		// do the drawing
 		if (hasVP && hasFP)
 		{
+		#if defined( OSX ) && defined( __aarch64__ )
+			gGL->glDrawRangeElements( mode, start, end, count, type, indicesActual );
+		#else
 			gGL->glDrawRangeElementsBaseVertex( mode, start, end, count, type, indicesActual, baseVertex );
+		#endif
 
 			if ( m_slowCheckEnable )
 			{
@@ -2012,7 +2018,11 @@ FORCEINLINE void GLMContext::DrawRangeElements(	GLenum mode, GLuint start, GLuin
 
 	if ( m_pBoundPair )
 	{
+	#if defined( OSX ) && defined( __aarch64__ )
+		gGL->glDrawRangeElements( mode, start, end, count, type, indicesActual );
+	#else
 		gGL->glDrawRangeElementsBaseVertex( mode, start, end, count, type, indicesActual, baseVertex );
+	#endif
 
 #if GLMDEBUG
 		if ( m_slowCheckEnable )
