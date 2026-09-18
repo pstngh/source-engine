@@ -1828,11 +1828,15 @@ int CCSPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 	if ( GetMoveType() == MOVETYPE_NOCLIP || GetMoveType() == MOVETYPE_OBSERVER )
 		return 0;
 
+	if ( GetFlags() & FL_GODMODE )
+		return 0;
+
 	const float flArmorBonus = 0.5f;
 	float flArmorRatio = 0.5f;
 	float flDamage = info.GetDamage();
 
-	bool bFriendlyFire = CSGameRules()->IsFriendlyFireOn();
+	bool bFreeForAll = CSGameRules()->IsFreeForAll();
+	bool bFriendlyFire = CSGameRules()->IsFriendlyFireOn() || bFreeForAll;
 
 	//=============================================================================
 	// HPE_BEGIN:
@@ -1878,7 +1882,7 @@ int CCSPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 
 
 	// warn about team attacks
-	if ( bFriendlyFire && pInflictor->GetTeamNumber() == GetTeamNumber() && pInflictor != this && info.GetAttacker() != this )
+	if ( !bFreeForAll && bFriendlyFire && pInflictor->GetTeamNumber() == GetTeamNumber() && pInflictor != this && info.GetAttacker() != this )
 	{
 		CCSPlayer *pCSAttacker = ToCSPlayer( pInflictor );
 		if ( !pCSAttacker )
@@ -1915,7 +1919,7 @@ int CCSPlayer::OnTakeDamage( const CTakeDamageInfo &inputInfo )
 		pInflictor == this ||
 		info.GetAttacker() == this )
 	{
-		if ( bFriendlyFire && (info.GetDamageType() & DMG_BLAST) == 0 )
+		if ( !bFreeForAll && bFriendlyFire && (info.GetDamageType() & DMG_BLAST) == 0 )
 		{
 			if ( pInflictor->GetTeamNumber() == GetTeamNumber() )
 			{
@@ -2201,7 +2205,7 @@ void CCSPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 	// show blood for firendly fire only if FF is on
 	if ( pAttacker && ( GetTeamNumber() == pAttacker->GetTeamNumber() ) )
-		 bShouldBleed = CSGameRules()->IsFriendlyFireOn();
+		 bShouldBleed = CSGameRules()->IsFriendlyFireOn() || CSGameRules()->IsFreeForAll();
 
 	if ( m_takedamage != DAMAGE_YES )
 		return;
@@ -5385,6 +5389,13 @@ void CCSPlayer::State_Enter_DEATH_ANIM()
  
 void CCSPlayer::State_PreThink_DEATH_ANIM()
 {
+	if ( CSGameRules()->IsDeathmatchMode() &&
+		gpGlobals->curtime >= m_flDeathTime + mp_deathmatch_respawn_time.GetFloat() )
+	{
+		RoundRespawn();
+		return;
+	}
+
 	// If the anim is done playing, go to the next state (waiting for a keypress to
 	// either respawn the guy or put him into observer mode).
 	if ( GetFlags() & FL_ONGROUND )
@@ -5454,6 +5465,13 @@ void CCSPlayer::State_Enter_DEATH_WAIT_FOR_KEY()
 
 void CCSPlayer::State_PreThink_DEATH_WAIT_FOR_KEY()
 {
+	if ( CSGameRules()->IsDeathmatchMode() &&
+		gpGlobals->curtime >= m_flDeathTime + mp_deathmatch_respawn_time.GetFloat() )
+	{
+		RoundRespawn();
+		return;
+	}
+
 	// once we're done animating our death and we're on the ground, we want to set movetype to None so our dead body won't do collisions and stuff anymore
 	// this prevents a bug where the dead body would go to a player's head if he walked over it while the dead player was clicking their button to respawn
 	if ( GetMoveType() != MOVETYPE_NONE && (GetFlags() & FL_ONGROUND) )
@@ -5521,6 +5539,14 @@ void CCSPlayer::State_Enter_OBSERVER_MODE()
 
 void CCSPlayer::State_PreThink_OBSERVER_MODE()
 {
+	if ( CSGameRules()->IsDeathmatchMode() &&
+		( GetTeamNumber() == TEAM_TERRORIST || GetTeamNumber() == TEAM_CT ) &&
+		gpGlobals->curtime >= m_flDeathTime + mp_deathmatch_respawn_time.GetFloat() )
+	{
+		RoundRespawn();
+		return;
+	}
+
 	// Make sure nobody has changed any of our state.
 //	Assert( GetMoveType() == MOVETYPE_FLY );
 	Assert( m_takedamage == DAMAGE_NO );

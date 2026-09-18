@@ -1150,8 +1150,10 @@ void CC_God_f (void)
 		   return;
    }
 #else
+#if !defined( CSTRIKE_DLL )
 	if ( gpGlobals->deathmatch )
 		return;
+#endif
 #endif
 
 	pPlayer->ToggleFlag( FL_GODMODE );

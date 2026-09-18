@@ -36,6 +36,7 @@ class BotProfile;
 
 
 extern bool AreBotsAllowed();
+extern ConVar mp_deathmatch_mode;
 
 
 //--------------------------------------------------------------------------------------------------------
@@ -899,6 +900,10 @@ inline bool CBot< PlayerType >::IsEnemy( CBaseEntity *ent ) const
 		return false;	
 
 	CBasePlayer *player = static_cast<CBasePlayer *>( ent );
+
+	// In free-for-all, every other living player is an enemy, regardless of team.
+	if ( mp_deathmatch_mode.GetInt() == 2 )
+		return player != static_cast<const CBasePlayer *>( this );
 
 	// if they are on our team, they are our friends
 	if (player->GetTeamNumber() == this->GetTeamNumber())

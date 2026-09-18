@@ -223,6 +223,22 @@ ConVar mp_round_restart_delay(
 	true, 0.0f,
 	true, 10.0f );
 
+ConVar mp_deathmatch_mode(
+	"mp_deathmatch_mode",
+	"0",
+	FCVAR_REPLICATED | FCVAR_NOTIFY,
+	"Continuous-respawn mode: 0 = classic, 1 = team deathmatch, 2 = free-for-all.",
+	true, 0,
+	true, 2 );
+
+ConVar mp_deathmatch_respawn_time(
+	"mp_deathmatch_respawn_time",
+	"1.5",
+	FCVAR_REPLICATED | FCVAR_NOTIFY,
+	"Seconds before a dead player respawns in TDM or FFA.",
+	true, 0.0f,
+	true, 30.0f );
+
 ConVar sv_allowminmodels(
 	"sv_allowminmodels",
 	"1",
@@ -413,6 +429,41 @@ ConVar cl_autohelp(
 		"0",
 		FCVAR_REPLICATED,
 		"Ignore conditions which would end the current round");
+
+	static void ConfigureDeathmatchMode( int mode )
+	{
+		if ( !UTIL_IsCommandIssuedByServerAdmin() )
+			return;
+
+		mp_deathmatch_mode.SetValue( mode );
+		mp_ignore_round_win_conditions.SetValue( mode != 0 );
+		mp_fadetoblack.SetValue( 0 );
+		mp_autokick.SetValue( mode == 0 ? 1 : 0 );
+		mp_tkpunish.SetValue( 0 );
+		mp_freezetime.SetValue( mode == 0 ? 6 : 0 );
+		mp_limitteams.SetValue( mode == 0 ? 2 : 0 );
+		mp_autoteambalance.SetValue( mode == 0 ? 1 : 0 );
+		friendlyfire.SetValue( mode == 2 ? 1 : 0 );
+		mp_restartgame.SetValue( 1 );
+
+		const char *modeName = mode == 2 ? "free-for-all" : ( mode == 1 ? "team deathmatch" : "classic" );
+		Msg( "Game mode changed to %s; restarting in one second.\n", modeName );
+	}
+
+	CON_COMMAND( tdm, "Start team deathmatch with continuous respawning." )
+	{
+		ConfigureDeathmatchMode( 1 );
+	}
+
+	CON_COMMAND( ffa, "Start free-for-all with continuous respawning." )
+	{
+		ConfigureDeathmatchMode( 2 );
+	}
+
+	CON_COMMAND( classic, "Return to classic Counter-Strike round rules." )
+	{
+		ConfigureDeathmatchMode( 0 );
+	}
 
 	ConCommand EndRound( "endround", &CCSGameRules::EndRound, "End the current round.", FCVAR_CHEAT );
 
@@ -1690,7 +1741,7 @@ ConVar cl_autohelp(
 	 */
 	bool CCSGameRules::CheckWinConditions( void )
 	{
-		if ( mp_ignore_round_win_conditions.GetBool() )
+		if ( IsDeathmatchMode() || mp_ignore_round_win_conditions.GetBool() )
 		{
 			return false;
 		}
@@ -4956,6 +5007,21 @@ float CCSGameRules::GetRoundStartTime()
 float CCSGameRules::GetRoundElapsedTime()
 {
 	return gpGlobals->curtime - m_fRoundStartTime;
+}
+
+int CCSGameRules::PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget )
+{
+	if ( IsFreeForAll() && pPlayer && pTarget && pPlayer != pTarget && pTarget->IsPlayer() )
+		return GR_NOTTEAMMATE;
+
+#ifdef CLIENT_DLL
+	if ( pPlayer && pTarget && pTarget->IsPlayer() && pPlayer->GetTeamNumber() == pTarget->GetTeamNumber() )
+		return GR_TEAMMATE;
+
+	return GR_NOTTEAMMATE;
+#else
+	return BaseClass::PlayerRelationship( pPlayer, pTarget );
+#endif
 }
 
 

@@ -56,6 +56,8 @@ extern ConVar mp_c4timer;
 extern ConVar mp_buytime;
 extern ConVar mp_freezetime;
 extern ConVar mp_playerid;
+extern ConVar mp_deathmatch_mode;
+extern ConVar mp_deathmatch_respawn_time;
 
 #ifndef CLIENT_DLL
 	extern ConVar mp_autoteambalance;
@@ -91,8 +93,11 @@ public:
 
 	// Stuff that is shared between client and server.
 	bool IsFreezePeriod();
+	bool IsDeathmatchMode() const { return mp_deathmatch_mode.GetInt() != 0; }
+	bool IsFreeForAll() const { return mp_deathmatch_mode.GetInt() == 2; }
 
 	virtual bool ShouldCollide( int collisionGroup0, int collisionGroup1 );
+	virtual int PlayerRelationship( CBaseEntity *pPlayer, CBaseEntity *pTarget );
 
 	float GetMapRemainingTime();	// time till end of map, -1 if timelimit is disabled
 	float GetMapElapsedTime();	// How much time has elapsed since the map started.

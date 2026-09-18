@@ -62,3 +62,17 @@ This branch enables the following server-controlled settings by default:
 Set the first three variables to `0` in the server console to restore their
 original behavior. Set `weapon_recoil_scale` to `1` for stock recoil or `0` for
 no recoil.
+
+## Local practice modes
+
+On a local/listen server, open the developer console and use:
+
+- `sv_cheats 1; god` to toggle working invulnerability for the host player.
+- `tdm` to start team deathmatch with automatic respawning.
+- `ffa` to start free-for-all; all other players and bots become enemies.
+- `classic` to restore the normal team and round rules.
+
+TDM and FFA respawn players after 1.5 seconds and keep the round running. Change
+the delay with `mp_deathmatch_respawn_time`, for example
+`mp_deathmatch_respawn_time 0.5`. Add bots with `bot_quota 9`, or use
+`bot_quota_mode fill; bot_quota 10` to keep ten total players in the session.
