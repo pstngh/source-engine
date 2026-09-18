@@ -697,6 +697,14 @@ void CCSPlayer::UpdateStepSound( surfacedata_t *psurface, const Vector &vecOrigi
 // GOOSEMAN : Kick the view..
 void CCSPlayer::KickBack( float up_base, float lateral_base, float up_modifier, float lateral_modifier, float up_max, float lateral_max, int direction_change )
 {
+	const float flRecoilScale = weapon_recoil_scale.GetFloat();
+	up_base *= flRecoilScale;
+	lateral_base *= flRecoilScale;
+	up_modifier *= flRecoilScale;
+	lateral_modifier *= flRecoilScale;
+	up_max *= flRecoilScale;
+	lateral_max *= flRecoilScale;
+
 	float flKickUp;
 	float flKickLateral;
 
@@ -939,5 +947,4 @@ surfacedata_t * CCSPlayer::GetFootstepSurface( const Vector &origin, const char 
 }
 
 #endif
-
 

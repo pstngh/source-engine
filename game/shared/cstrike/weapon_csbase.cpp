@@ -40,6 +40,7 @@
 ConVar weapon_accuracy_model( "weapon_accuracy_model", "2", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY | FCVAR_ARCHIVE );
 ConVar sv_infinite_ammo( "sv_infinite_ammo", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Prevent Counter-Strike weapons and grenades from consuming ammunition." );
 ConVar weapon_no_spread( "weapon_no_spread", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Make Counter-Strike bullets perfectly accurate." );
+ConVar weapon_recoil_scale( "weapon_recoil_scale", "0.35", FCVAR_REPLICATED | FCVAR_NOTIFY, "Scale Counter-Strike weapon view recoil (0 = none, 1 = stock).", true, 0.0f, true, 1.0f );
 
 
 // ----------------------------------------------------------------------------- //

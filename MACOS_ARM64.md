@@ -57,6 +57,8 @@ This branch enables the following server-controlled settings by default:
 - `sv_infinite_money 1` keeps each player's balance at the normal $16,000 cap.
 - `sv_infinite_ammo 1` prevents firearms and grenades from consuming ammo.
 - `weapon_no_spread 1` removes bullet inaccuracy and spread.
+- `weapon_recoil_scale 0.35` reduces weapon view recoil to 35% of stock.
 
-Set any of these variables to `0` in the server console to restore the original
-behavior for that feature.
+Set the first three variables to `0` in the server console to restore their
+original behavior. Set `weapon_recoil_scale` to `1` for stock recoil or `0` for
+no recoil.

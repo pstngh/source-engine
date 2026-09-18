@@ -292,5 +292,6 @@ private:
 extern ConVar weapon_accuracy_model;
 extern ConVar sv_infinite_ammo;
 extern ConVar weapon_no_spread;
+extern ConVar weapon_recoil_scale;
 
 #endif // WEAPON_CSBASE_H
