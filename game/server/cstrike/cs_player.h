@@ -295,6 +295,9 @@ public:
 	virtual bool CSAnim_CanMove();
 
 	virtual float GetPlayerMaxSpeed();
+	virtual Vector Weapon_ShootPosition();
+	void UpdateLeanAngle( int buttons, float frameTime );
+	Vector GetLeanViewOrigin( const Vector &eyeOrigin, const QAngle &eyeAngles );
 
 	void FireBullet( 
 		Vector vecSrc, 
@@ -688,6 +691,7 @@ public:
 	void RescueZoneTouch( inputdata_t &inputdata );
 
 	CNetworkVar( float, m_flStamina );
+	CNetworkVar( float, m_flLeanAngle );
 	CNetworkVar( int, m_iDirection );	// The current lateral kicking direction; 1 = right,  0 = left
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
 

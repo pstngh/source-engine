@@ -150,6 +150,7 @@ BEGIN_PREDICTION_DATA( C_CSPlayer )
 	DEFINE_PRED_FIELD( m_bShieldDrawn, FIELD_BOOLEAN, FTYPEDESC_INSENDTABLE ),
 #endif
 	DEFINE_PRED_FIELD_TOL( m_flStamina, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.1f ),
+	DEFINE_PRED_FIELD_TOL( m_flLeanAngle, FIELD_FLOAT, FTYPEDESC_INSENDTABLE, 0.01f ),
 	DEFINE_PRED_FIELD( m_flCycle, FIELD_FLOAT, FTYPEDESC_OVERRIDE | FTYPEDESC_PRIVATE | FTYPEDESC_NOERRORCHECK ),
 	DEFINE_PRED_FIELD( m_iShotsFired, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
 	DEFINE_PRED_FIELD( m_iDirection, FIELD_INTEGER, FTYPEDESC_INSENDTABLE ),
@@ -707,6 +708,7 @@ USER_MESSAGE_REGISTER( ReloadEffect );
 
 BEGIN_RECV_TABLE_NOBASE( C_CSPlayer, DT_CSLocalPlayerExclusive )
 	RecvPropFloat( RECVINFO(m_flStamina) ),
+	RecvPropFloat( RECVINFO(m_flLeanAngle) ),
 	RecvPropInt( RECVINFO( m_iDirection ) ),
 	RecvPropInt( RECVINFO( m_iShotsFired ) ),
 	RecvPropFloat( RECVINFO( m_flVelocityModifier ) ),
@@ -809,6 +811,7 @@ C_CSPlayer::C_CSPlayer() :
 	m_iOldIDEntIndex = 0;
 	m_holdTargetIDTimer.Reset();
 	m_iDirection = 0;
+	m_flLeanAngle = 0.0f;
 
 	m_Activity = ACT_IDLE;
 
@@ -1549,6 +1552,26 @@ bool C_CSPlayer::CreateMove( float flInputSampleTime, CUserCmd *pCmd )
 	C_BaseAnimating::AutoAllowBoneAccess boneaccess( true, true );
 
 	return BaseClass::CreateMove( flInputSampleTime, pCmd );
+}
+
+
+void C_CSPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov )
+{
+	BaseClass::CalcView( eyeOrigin, eyeAngles, zNear, zFar, fov );
+
+	if ( !IsLocalPlayer() || IsObserver() || GetVehicle() )
+		return;
+
+	eyeOrigin = GetLeanViewOrigin( eyeOrigin, eyeAngles );
+	eyeAngles[ROLL] += m_flLeanAngle * CS_LEAN_VIEW_ROLL;
+}
+
+
+void C_CSPlayer::CalcViewModelView( const Vector &eyeOrigin, const QAngle &eyeAngles )
+{
+	Vector up;
+	AngleVectors( eyeAngles, NULL, NULL, &up );
+	BaseClass::CalcViewModelView( eyeOrigin - up * fabsf( m_flLeanAngle ) * CS_LEAN_VIEWMODEL_LOWER, eyeAngles );
 }
 
 //-----------------------------------------------------------------------------
@@ -2550,4 +2573,3 @@ float C_CSPlayer::GetDeathCamInterpolationTime()
 //=============================================================================
 // HPE_END
 //=============================================================================
-

@@ -90,6 +90,7 @@ const float CycleLatchInterval = 0.2f;
 ConVar cs_ShowStateTransitions( "cs_ShowStateTransitions", "-2", FCVAR_CHEAT, "cs_ShowStateTransitions <ent index or -1 for all>. Show player state transitions." );
 ConVar sv_max_usercmd_future_ticks( "sv_max_usercmd_future_ticks", "8", 0, "Prevents clients from running usercmds too far in the future. Prevents speed hacks." );
 ConVar sv_motd_unload_on_dismissal( "sv_motd_unload_on_dismissal", "0", 0, "If enabled, the MOTD contents will be unloaded when the player closes the MOTD." );
+ConVar sv_damage_kickback( "sv_damage_kickback", "0", FCVAR_REPLICATED | FCVAR_NOTIFY, "Apply stock view punch when a Counter-Strike player takes damage." );
 
 static void SvInfiniteMoneyChangeCallback( IConVar *pConVar, const char *pOldValue, float flOldValue )
 {
@@ -323,6 +324,7 @@ PRECACHE_REGISTER(player);
 
 BEGIN_SEND_TABLE_NOBASE( CCSPlayer, DT_CSLocalPlayerExclusive )
 	SendPropFloat( SENDINFO( m_flStamina ), 14, 0, 0, 1400  ),
+	SendPropFloat( SENDINFO( m_flLeanAngle ), 12, 0, -CS_LEAN_MAX, CS_LEAN_MAX ),
 	SendPropInt( SENDINFO( m_iDirection ), 1, SPROP_UNSIGNED ),
 	SendPropInt( SENDINFO( m_iShotsFired ), 8, SPROP_UNSIGNED ),
 	SendPropFloat( SENDINFO( m_flVelocityModifier ), 8, 0, 0, 1  ),
@@ -489,6 +491,7 @@ CCSPlayer::CCSPlayer()
 	m_bTeamChanged = false;
 	m_iShotsFired = 0;
 	m_iDirection = 0;
+	m_flLeanAngle = 0.0f;
 	m_receivesMoneyNextRound = true;
 	m_bIsBeingGivenItem = false;
 	m_isVIP = false;
@@ -888,6 +891,7 @@ void CCSPlayer::Spawn()
 
 	m_iShotsFired = 0;
 	m_iDirection = 0;
+	m_flLeanAngle = 0.0f;
 
 	if ( m_pHintMessageQueue )
 	{
@@ -2237,7 +2241,7 @@ void CCSPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 		if ( ArmorValue() > 0 )
 			 bShouldBleed = false;
 
-		if ( bShouldBleed == true )
+		if ( bShouldBleed == true && sv_damage_kickback.GetBool() )
 		{
 			// punch view if we have no armor
 			QAngle punchAngle = GetPunchAngle();
@@ -2280,7 +2284,7 @@ void CCSPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 			flDamage *= 4;
 
-			if ( !m_bHasHelmet )
+			if ( !m_bHasHelmet && sv_damage_kickback.GetBool() )
 			{
 				QAngle punchAngle = GetPunchAngle();
 				punchAngle.x = flDamage * -0.5;
@@ -2307,7 +2311,7 @@ void CCSPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 			flDamage *= 1.0;
 
-			if ( ArmorValue() <= 0 )
+			if ( ArmorValue() <= 0 && sv_damage_kickback.GetBool() )
 			{
 				QAngle punchAngle = GetPunchAngle();
 				punchAngle.x = flDamage * -0.1;
@@ -2323,7 +2327,7 @@ void CCSPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 
 			flDamage *= 1.25;
 
-			if ( ArmorValue() <= 0 )
+			if ( ArmorValue() <= 0 && sv_damage_kickback.GetBool() )
 			{
 				QAngle punchAngle = GetPunchAngle();
 				punchAngle.x = flDamage * -0.1;

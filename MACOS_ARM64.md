@@ -58,10 +58,20 @@ This branch enables the following server-controlled settings by default:
 - `sv_infinite_ammo 1` prevents firearms and grenades from consuming ammo.
 - `weapon_no_spread 1` removes bullet inaccuracy and spread.
 - `weapon_recoil_scale 0.35` reduces weapon view recoil to 35% of stock.
+- `sv_damage_kickback 0` disables the stock view punch caused by taking damage.
 
 Set the first three variables to `0` in the server console to restore their
 original behavior. Set `weapon_recoil_scale` to `1` for stock recoil or `0` for
-no recoil.
+no recoil, and set `sv_damage_kickback` to `1` to restore damage view punch.
+
+Mouse-wheel weapon cycling selects the highlighted weapon immediately. The
+`+leanleft` and `+leanright` commands use OpenMoHAA's Allied Assault multiplayer
+lean angle, timing, camera pivot, roll, and collision dimensions. For example:
+
+```text
+bind z +leanleft
+bind c +leanright
+```
 
 ## Local practice modes
 

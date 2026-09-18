@@ -319,6 +319,7 @@ void CCSGameMovement::ProcessMovement( CBasePlayer *pBasePlayer, CMoveData *pMov
 	m_pCSPlayer = ToCSPlayer( pBasePlayer );
 	Assert( m_pCSPlayer );
 
+	m_pCSPlayer->UpdateLeanAngle( pMove->m_nButtons, gpGlobals->frametime );
 	BaseClass::ProcessMovement( pBasePlayer, pMove );
 }
 

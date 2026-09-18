@@ -144,6 +144,8 @@ static	kbutton_t	in_zoom;
 static  kbutton_t   in_grenade1;
 static  kbutton_t   in_grenade2;
 static	kbutton_t	in_attack3;
+static	kbutton_t	in_leanleft;
+static	kbutton_t	in_leanright;
 kbutton_t	in_ducktoggle;
 
 /*
@@ -491,6 +493,10 @@ void IN_Grenade2Down( const CCommand &args ) { KeyDown( &in_grenade2, args[1] );
 void IN_XboxStub( const CCommand &args ) { /*do nothing*/ }
 void IN_Attack3Down( const CCommand &args ) { KeyDown(&in_attack3, args[1] );}
 void IN_Attack3Up( const CCommand &args ) { KeyUp(&in_attack3, args[1] );}
+void IN_LeanLeftDown( const CCommand &args ) { KeyDown(&in_leanleft, args[1] );}
+void IN_LeanLeftUp( const CCommand &args ) { KeyUp(&in_leanleft, args[1] );}
+void IN_LeanRightDown( const CCommand &args ) { KeyDown(&in_leanright, args[1] );}
+void IN_LeanRightUp( const CCommand &args ) { KeyUp(&in_leanright, args[1] );}
 
 void IN_DuckToggle( const CCommand &args ) 
 { 
@@ -1472,6 +1478,8 @@ int CInput::GetButtonBits( int bResetState )
 	CalcButtonBits( bits, IN_GRENADE1, s_ClearInputState, &in_grenade1, bResetState );
 	CalcButtonBits( bits, IN_GRENADE2, s_ClearInputState, &in_grenade2, bResetState );
 	CalcButtonBits( bits, IN_ATTACK3, s_ClearInputState, &in_attack3, bResetState );
+	CalcButtonBits( bits, IN_LEANLEFT, s_ClearInputState, &in_leanleft, bResetState );
+	CalcButtonBits( bits, IN_LEANRIGHT, s_ClearInputState, &in_leanright, bResetState );
 
 	if ( KeyState(&in_ducktoggle) )
 	{
@@ -1629,6 +1637,10 @@ static ConCommand endgrenade2( "-grenade2", IN_Grenade2Up );
 static ConCommand startgrenade2( "+grenade2", IN_Grenade2Down );
 static ConCommand startattack3("+attack3", IN_Attack3Down);
 static ConCommand endattack3("-attack3", IN_Attack3Up);
+static ConCommand startleanleft("+leanleft", IN_LeanLeftDown);
+static ConCommand endleanleft("-leanleft", IN_LeanLeftUp);
+static ConCommand startleanright("+leanright", IN_LeanRightDown);
+static ConCommand endleanright("-leanright", IN_LeanRightUp);
 
 #ifdef TF_CLIENT_DLL
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );
@@ -1700,4 +1712,3 @@ void CInput::LevelInit( void )
 	m_EntityGroundContact.RemoveAll();
 #endif
 }
-

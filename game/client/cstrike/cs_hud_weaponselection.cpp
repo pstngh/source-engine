@@ -557,15 +557,7 @@ void CHudWeaponSelection::CycleToNextWeapon( void )
 	if ( pNextWeapon )
 	{
 		SetSelectedWeapon( pNextWeapon );
-
-		if( hud_fastswitch.GetInt() > 0 )
-		{
-			SelectWeapon();
-		}
-		else if ( !IsInSelectionMode() )
-		{
-			OpenSelection();
-		}
+		SelectWeapon();
 
 		// Play the "cycle to next weapon" sound
 		if( m_bPlaySelectionSounds )
@@ -615,15 +607,7 @@ void CHudWeaponSelection::CycleToPrevWeapon( void )
 	if ( pNextWeapon )
 	{
 		SetSelectedWeapon( pNextWeapon );
-
-		if( hud_fastswitch.GetInt() > 0 )
-		{
-			SelectWeapon();
-		}
-		else if ( !IsInSelectionMode() )
-		{
-			OpenSelection();
-		}
+		SelectWeapon();
 
 		// Play the "cycle to next weapon" sound
 		if( m_bPlaySelectionSounds )

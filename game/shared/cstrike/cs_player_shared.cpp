@@ -40,6 +40,110 @@ ConVar sv_showplayerhitboxes( "sv_showplayerhitboxes", "0", FCVAR_REPLICATED, "S
 void DispatchEffect( const char *pName, const CEffectData &data );
 
 
+void CCSPlayer::UpdateLeanAngle( int buttons, float frameTime )
+{
+	if ( IsBot() || !IsAlive() || GetMoveType() == MOVETYPE_LADDER || GetMoveType() == MOVETYPE_OBSERVER )
+	{
+		m_flLeanAngle = 0.0f;
+		return;
+	}
+
+	const int leanButtons = buttons & ( IN_LEANLEFT | IN_LEANRIGHT );
+	if ( leanButtons != 0 && leanButtons != ( IN_LEANLEFT | IN_LEANRIGHT ) )
+	{
+		if ( leanButtons & IN_LEANLEFT )
+		{
+			if ( m_flLeanAngle <= -CS_LEAN_MAX )
+			{
+				m_flLeanAngle = -CS_LEAN_MAX;
+			}
+			else
+			{
+				const float angleStep = frameTime * ( -CS_LEAN_MAX - m_flLeanAngle ) * CS_LEAN_ADD;
+				float leanStep = frameTime * -CS_LEAN_SPEED;
+				if ( angleStep <= leanStep )
+					leanStep = angleStep;
+
+				m_flLeanAngle += leanStep;
+			}
+		}
+		else
+		{
+			if ( m_flLeanAngle >= CS_LEAN_MAX )
+			{
+				m_flLeanAngle = CS_LEAN_MAX;
+			}
+			else
+			{
+				const float angleStep = frameTime * ( CS_LEAN_MAX - m_flLeanAngle ) * CS_LEAN_ADD;
+				m_flLeanAngle += angleStep;
+			}
+		}
+	}
+	else if ( m_flLeanAngle != 0.0f )
+	{
+		const float angleStep = m_flLeanAngle * frameTime * CS_LEAN_RECOVER_SPEED;
+		if ( m_flLeanAngle <= 0.0f )
+		{
+			float leanStep = frameTime * -CS_LEAN_SPEED;
+			if ( leanStep >= angleStep )
+				leanStep = angleStep;
+
+			m_flLeanAngle -= leanStep;
+			if ( m_flLeanAngle > 0.0f )
+				m_flLeanAngle = 0.0f;
+		}
+		else
+		{
+			float leanStep = frameTime * CS_LEAN_SPEED;
+			if ( leanStep <= angleStep )
+				leanStep = angleStep;
+
+			m_flLeanAngle -= leanStep;
+			if ( m_flLeanAngle < 0.0f )
+				m_flLeanAngle = 0.0f;
+		}
+	}
+}
+
+
+Vector CCSPlayer::GetLeanViewOrigin( const Vector &eyeOrigin, const QAngle &eyeAngles )
+{
+	if ( m_flLeanAngle == 0.0f || IsBot() )
+		return eyeOrigin;
+
+	QAngle pivotAngles( eyeAngles[PITCH], eyeAngles[YAW], 0.0f );
+	Vector forward;
+	AngleVectors( pivotAngles, &forward );
+	VectorNormalize( forward );
+
+	const Vector pivotDelta( 0.0f, 0.0f, CS_LEAN_VIEW_PIVOT );
+	const float radians = DEG2RAD( m_flLeanAngle );
+	const float sine = sinf( radians );
+	const float cosine = cosf( radians );
+	const Vector rotatedDelta = pivotDelta * cosine + CrossProduct( forward, pivotDelta ) * sine
+		+ forward * DotProduct( forward, pivotDelta ) * ( 1.0f - cosine );
+	const Vector desiredOrigin = eyeOrigin - pivotDelta + rotatedDelta;
+
+	const Vector viewMins( -6.0f, -6.0f, -6.0f );
+	const Vector viewMaxs( 6.0f, 6.0f, 6.0f );
+	trace_t trace;
+	Vector heightEnd( eyeOrigin.x, eyeOrigin.y, desiredOrigin.z );
+	UTIL_TraceHull( eyeOrigin, heightEnd, viewMins, viewMaxs, MASK_PLAYERSOLID, this, COLLISION_GROUP_NONE, &trace );
+
+	Vector lateralEnd( desiredOrigin.x, desiredOrigin.y, trace.endpos.z );
+	UTIL_TraceHull( trace.endpos, lateralEnd, viewMins, viewMaxs, MASK_PLAYERSOLID, this, COLLISION_GROUP_NONE, &trace );
+	return trace.endpos;
+}
+
+
+Vector CCSPlayer::Weapon_ShootPosition()
+{
+	const Vector eyeOrigin = BaseClass::Weapon_ShootPosition();
+	return GetLeanViewOrigin( eyeOrigin, EyeAngles() );
+}
+
+
 #ifdef _DEBUG
 
 	// This is some extra code to collect weapon accuracy stats:
@@ -947,4 +1051,3 @@ surfacedata_t * CCSPlayer::GetFootstepSurface( const Vector &origin, const char 
 }
 
 #endif
-

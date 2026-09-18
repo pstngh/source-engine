@@ -10,6 +10,15 @@
 #pragma once
 #endif
 
+// OpenMoHAA's Medal of Honor: Allied Assault multiplayer lean profile.
+const float CS_LEAN_MAX = 40.0f;
+const float CS_LEAN_ADD = 10.0f;
+const float CS_LEAN_RECOVER_SPEED = 15.0f;
+const float CS_LEAN_SPEED = 4.0f;
+const float CS_LEAN_VIEW_PIVOT = 28.7f;
+const float CS_LEAN_VIEW_ROLL = 0.4f;
+const float CS_LEAN_VIEWMODEL_LOWER = 0.1f;
+
 /*======================*/
 //      Menu stuff      //
 /*======================*/

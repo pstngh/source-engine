@@ -74,7 +74,10 @@ public:
 
 	virtual const QAngle& EyeAngles();
 	virtual const QAngle& GetRenderAngles();
+	virtual void CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, float &zFar, float &fov );
+	virtual void CalcViewModelView( const Vector &eyeOrigin, const QAngle &eyeAngles );
 	virtual void CalcObserverView( Vector& eyeOrigin, QAngle& eyeAngles, float& fov );
+	virtual Vector Weapon_ShootPosition();
 
 	virtual void			GetRenderBounds( Vector& theMins, Vector& theMaxs );
 	virtual void			GetShadowRenderBounds( Vector &mins, Vector &maxs, ShadowType_t shadowType );
@@ -169,6 +172,8 @@ public:
 // Implemented in shared code.
 public:
 	virtual float GetPlayerMaxSpeed();
+	void UpdateLeanAngle( int buttons, float frameTime );
+	Vector GetLeanViewOrigin( const Vector &eyeOrigin, const QAngle &eyeAngles );
 
 	void GetBulletTypeParameters(
 		int iBulletType,
@@ -252,6 +257,7 @@ public:
 	CNetworkVar( float, m_flProgressBarStartTime );
 
 	CNetworkVar( float, m_flStamina );
+	CNetworkVar( float, m_flLeanAngle );
 	CNetworkVar( int, m_iDirection );	// The current lateral kicking direction; 1 = right,  0 = left
 	CNetworkVar( int, m_iShotsFired );	// number of shots fired recently
 	CNetworkVar( bool, m_bNightVisionOn );
