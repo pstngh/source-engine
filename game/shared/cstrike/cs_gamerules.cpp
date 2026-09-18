@@ -225,7 +225,7 @@ ConVar mp_round_restart_delay(
 
 ConVar mp_deathmatch_mode(
 	"mp_deathmatch_mode",
-	"0",
+	"2",
 	FCVAR_REPLICATED | FCVAR_NOTIFY,
 	"Continuous-respawn mode: 0 = classic, 1 = team deathmatch, 2 = free-for-all.",
 	true, 0,
@@ -430,12 +430,8 @@ ConVar cl_autohelp(
 		FCVAR_REPLICATED,
 		"Ignore conditions which would end the current round");
 
-	static void ConfigureDeathmatchMode( int mode )
+	static void ApplyDeathmatchModeSettings( int mode )
 	{
-		if ( !UTIL_IsCommandIssuedByServerAdmin() )
-			return;
-
-		mp_deathmatch_mode.SetValue( mode );
 		mp_ignore_round_win_conditions.SetValue( mode != 0 );
 		mp_fadetoblack.SetValue( 0 );
 		mp_autokick.SetValue( mode == 0 ? 1 : 0 );
@@ -444,6 +440,15 @@ ConVar cl_autohelp(
 		mp_limitteams.SetValue( mode == 0 ? 2 : 0 );
 		mp_autoteambalance.SetValue( mode == 0 ? 1 : 0 );
 		friendlyfire.SetValue( mode == 2 ? 1 : 0 );
+	}
+
+	static void ConfigureDeathmatchMode( int mode )
+	{
+		if ( !UTIL_IsCommandIssuedByServerAdmin() )
+			return;
+
+		mp_deathmatch_mode.SetValue( mode );
+		ApplyDeathmatchModeSettings( mode );
 		mp_restartgame.SetValue( 1 );
 
 		const char *modeName = mode == 2 ? "free-for-all" : ( mode == 1 ? "team deathmatch" : "classic" );
@@ -716,6 +721,7 @@ ConVar cl_autohelp(
 		m_flNextHostageAnnouncement = gpGlobals->curtime;	// asap.
 
 		ReadMultiplayCvars();
+		ApplyDeathmatchModeSettings( mp_deathmatch_mode.GetInt() );
 
 		m_pPrices = NULL;
 		m_bBlackMarket = false;

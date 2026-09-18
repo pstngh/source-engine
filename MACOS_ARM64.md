@@ -65,7 +65,9 @@ no recoil.
 
 ## Local practice modes
 
-On a local/listen server, open the developer console and use:
+Games created from the menu start in free-for-all mode by default, with automatic
+respawning and no freeze time. On a local/listen server, open the developer
+console and use:
 
 - `sv_cheats 1; god` to toggle working invulnerability for the host player.
 - `tdm` to start team deathmatch with automatic respawning.
