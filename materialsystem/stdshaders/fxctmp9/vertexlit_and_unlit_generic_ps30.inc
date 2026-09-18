@@ -20,6 +20,7 @@
 // ($BLENDTINTBYBASEALPHA) && ($SELFILLUM || (($DISTANCEALPHA) && ($DISTANCEALPHAFROMDETAIL == 0)) || $BASEALPHAENVMAPMASK)
 // $FLASHLIGHT && $CUBEMAP
 // $CUBEMAP_SPHERE_LEGACY && ($CUBEMAP == 0)
+// ($STATIC_LIGHT_LIGHTMAP == 0) && ($DEBUG_LUXELS == 1)
 // defined $HDRTYPE && defined $HDRENABLED && !$HDRTYPE && $HDRENABLED
 // defined $PIXELFOGTYPE && defined $WRITEWATERFOGTODESTALPHA && ( $PIXELFOGTYPE != 1 ) && $WRITEWATERFOGTODESTALPHA
 // defined $LIGHTING_PREVIEW && defined $HDRTYPE && $LIGHTING_PREVIEW && $HDRTYPE != 0
@@ -278,7 +279,7 @@ public:
 #endif	// _DEBUG
 	}
 
-	vertexlit_and_unlit_generic_ps30_Static_Index()
+	vertexlit_and_unlit_generic_ps30_Static_Index( )
 	{
 		m_nDETAILTEXTURE = 0;
 		m_nCUBEMAP = 0;
@@ -329,7 +330,7 @@ public:
 	int GetIndex() const
 	{
 		Assert( m_bDETAILTEXTURE && m_bCUBEMAP && m_bDIFFUSELIGHTING && m_bENVMAPMASK && m_bBASEALPHAENVMAPMASK && m_bSELFILLUM && m_bVERTEXCOLOR && m_bFLASHLIGHT && m_bSELFILLUM_ENVMAPMASK_ALPHA && m_bDETAIL_BLEND_MODE && m_bSEAMLESS_BASE && m_bSEAMLESS_DETAIL && m_bDISTANCEALPHA && m_bDISTANCEALPHAFROMDETAIL && m_bSOFT_MASK && m_bOUTLINE && m_bOUTER_GLOW && m_bFLASHLIGHTDEPTHFILTERMODE && m_bDEPTHBLEND && m_bBLENDTINTBYBASEALPHA && m_bCUBEMAP_SPHERE_LEGACY );
-		return ( 6 * m_nDETAILTEXTURE ) + ( 12 * m_nCUBEMAP ) + ( 24 * m_nDIFFUSELIGHTING ) + ( 48 * m_nENVMAPMASK ) + ( 96 * m_nBASEALPHAENVMAPMASK ) + ( 192 * m_nSELFILLUM ) + ( 384 * m_nVERTEXCOLOR ) + ( 768 * m_nFLASHLIGHT ) + ( 1536 * m_nSELFILLUM_ENVMAPMASK_ALPHA ) + ( 3072 * m_nDETAIL_BLEND_MODE ) + ( 30720 * m_nSEAMLESS_BASE ) + ( 61440 * m_nSEAMLESS_DETAIL ) + ( 122880 * m_nDISTANCEALPHA ) + ( 245760 * m_nDISTANCEALPHAFROMDETAIL ) + ( 491520 * m_nSOFT_MASK ) + ( 983040 * m_nOUTLINE ) + ( 1966080 * m_nOUTER_GLOW ) + ( 3932160 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 11796480 * m_nDEPTHBLEND ) + ( 23592960 * m_nBLENDTINTBYBASEALPHA ) + ( 47185920 * m_nCUBEMAP_SPHERE_LEGACY ) + 0;
+		return ( 24 * m_nDETAILTEXTURE ) + ( 48 * m_nCUBEMAP ) + ( 96 * m_nDIFFUSELIGHTING ) + ( 192 * m_nENVMAPMASK ) + ( 384 * m_nBASEALPHAENVMAPMASK ) + ( 768 * m_nSELFILLUM ) + ( 1536 * m_nVERTEXCOLOR ) + ( 3072 * m_nFLASHLIGHT ) + ( 6144 * m_nSELFILLUM_ENVMAPMASK_ALPHA ) + ( 12288 * m_nDETAIL_BLEND_MODE ) + ( 122880 * m_nSEAMLESS_BASE ) + ( 245760 * m_nSEAMLESS_DETAIL ) + ( 491520 * m_nDISTANCEALPHA ) + ( 983040 * m_nDISTANCEALPHAFROMDETAIL ) + ( 1966080 * m_nSOFT_MASK ) + ( 3932160 * m_nOUTLINE ) + ( 7864320 * m_nOUTER_GLOW ) + ( 15728640 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 47185920 * m_nDEPTHBLEND ) + ( 94371840 * m_nBLENDTINTBYBASEALPHA ) + ( 188743680 * m_nCUBEMAP_SPHERE_LEGACY ) + 0;
 	}
 };
 
@@ -340,9 +341,13 @@ class vertexlit_and_unlit_generic_ps30_Dynamic_Index
 {
 	unsigned int m_nLIGHTING_PREVIEW : 2;
 	unsigned int m_nFLASHLIGHTSHADOWS : 2;
+	unsigned int m_nSTATIC_LIGHT_LIGHTMAP : 2;
+	unsigned int m_nDEBUG_LUXELS : 2;
 #ifdef _DEBUG
 	bool m_bLIGHTING_PREVIEW : 1;
 	bool m_bFLASHLIGHTSHADOWS : 1;
+	bool m_bSTATIC_LIGHT_LIGHTMAP : 1;
+	bool m_bDEBUG_LUXELS : 1;
 #endif	// _DEBUG
 public:
 	void SetLIGHTING_PREVIEW( int i )
@@ -363,24 +368,46 @@ public:
 #endif	// _DEBUG
 	}
 
-	vertexlit_and_unlit_generic_ps30_Dynamic_Index()
+	void SetSTATIC_LIGHT_LIGHTMAP( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nSTATIC_LIGHT_LIGHTMAP = i;
+#ifdef _DEBUG
+		m_bSTATIC_LIGHT_LIGHTMAP = true;
+#endif	// _DEBUG
+	}
+
+	void SetDEBUG_LUXELS( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nDEBUG_LUXELS = i;
+#ifdef _DEBUG
+		m_bDEBUG_LUXELS = true;
+#endif	// _DEBUG
+	}
+
+	vertexlit_and_unlit_generic_ps30_Dynamic_Index( )
 	{
 		m_nLIGHTING_PREVIEW = 0;
 		m_nFLASHLIGHTSHADOWS = 0;
+		m_nSTATIC_LIGHT_LIGHTMAP = 0;
+		m_nDEBUG_LUXELS = 0;
 #ifdef _DEBUG
 		m_bLIGHTING_PREVIEW = false;
 		m_bFLASHLIGHTSHADOWS = false;
+		m_bSTATIC_LIGHT_LIGHTMAP = false;
+		m_bDEBUG_LUXELS = false;
 #endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bLIGHTING_PREVIEW && m_bFLASHLIGHTSHADOWS );
-		return ( 1 * m_nLIGHTING_PREVIEW ) + ( 3 * m_nFLASHLIGHTSHADOWS ) + 0;
+		Assert( m_bLIGHTING_PREVIEW && m_bFLASHLIGHTSHADOWS && m_bSTATIC_LIGHT_LIGHTMAP && m_bDEBUG_LUXELS );
+		return ( 1 * m_nLIGHTING_PREVIEW ) + ( 3 * m_nFLASHLIGHTSHADOWS ) + ( 6 * m_nSTATIC_LIGHT_LIGHTMAP ) + ( 12 * m_nDEBUG_LUXELS ) + 0;
 	}
 };
 
-#define shaderDynamicTest_vertexlit_and_unlit_generic_ps30 psh_forgot_to_set_dynamic_LIGHTING_PREVIEW + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS
+#define shaderDynamicTest_vertexlit_and_unlit_generic_ps30 psh_forgot_to_set_dynamic_LIGHTING_PREVIEW + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + psh_forgot_to_set_dynamic_STATIC_LIGHT_LIGHTMAP + psh_forgot_to_set_dynamic_DEBUG_LUXELS
 
 
 #endif	// VERTEXLIT_AND_UNLIT_GENERIC_PS30_H

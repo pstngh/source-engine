@@ -142,7 +142,7 @@ public:
 	int GetIndex() const
 	{
 		Assert( m_bVERTEXCOLOR && m_bCUBEMAP && m_bHALFLAMBERT && m_bFLASHLIGHT && m_bSEAMLESS_BASE && m_bSEAMLESS_DETAIL && m_bSEPARATE_DETAIL_UVS && m_bUSE_STATIC_CONTROL_FLOW && m_bDONT_GAMMA_CONVERT_VERTEX_COLOR );
-		return ( 192 * m_nVERTEXCOLOR ) + ( 384 * m_nCUBEMAP ) + ( 768 * m_nHALFLAMBERT ) + ( 1536 * m_nFLASHLIGHT ) + ( 3072 * m_nSEAMLESS_BASE ) + ( 6144 * m_nSEAMLESS_DETAIL ) + ( 12288 * m_nSEPARATE_DETAIL_UVS ) + ( 24576 * m_nUSE_STATIC_CONTROL_FLOW ) + ( 49152 * m_nDONT_GAMMA_CONVERT_VERTEX_COLOR ) + 0;
+		return ( 384 * m_nVERTEXCOLOR ) + ( 768 * m_nCUBEMAP ) + ( 1536 * m_nHALFLAMBERT ) + ( 3072 * m_nFLASHLIGHT ) + ( 6144 * m_nSEAMLESS_BASE ) + ( 12288 * m_nSEAMLESS_DETAIL ) + ( 24576 * m_nSEPARATE_DETAIL_UVS ) + ( 49152 * m_nUSE_STATIC_CONTROL_FLOW ) + ( 98304 * m_nDONT_GAMMA_CONVERT_VERTEX_COLOR ) + 0;
 	}
 };
 
@@ -153,7 +153,8 @@ class vertexlit_and_unlit_generic_vs20_Dynamic_Index
 {
 	unsigned int m_nCOMPRESSED_VERTS : 2;
 	unsigned int m_nDYNAMIC_LIGHT : 2;
-	unsigned int m_nSTATIC_LIGHT : 2;
+	unsigned int m_nSTATIC_LIGHT_VERTEX : 2;
+	unsigned int m_nSTATIC_LIGHT_LIGHTMAP : 2;
 	unsigned int m_nDOWATERFOG : 2;
 	unsigned int m_nSKINNING : 2;
 	unsigned int m_nLIGHTING_PREVIEW : 2;
@@ -161,7 +162,8 @@ class vertexlit_and_unlit_generic_vs20_Dynamic_Index
 #ifdef _DEBUG
 	bool m_bCOMPRESSED_VERTS : 1;
 	bool m_bDYNAMIC_LIGHT : 1;
-	bool m_bSTATIC_LIGHT : 1;
+	bool m_bSTATIC_LIGHT_VERTEX : 1;
+	bool m_bSTATIC_LIGHT_LIGHTMAP : 1;
 	bool m_bDOWATERFOG : 1;
 	bool m_bSKINNING : 1;
 	bool m_bLIGHTING_PREVIEW : 1;
@@ -186,12 +188,21 @@ public:
 #endif	// _DEBUG
 	}
 
-	void SetSTATIC_LIGHT( int i )
+	void SetSTATIC_LIGHT_VERTEX( int i )
 	{
 		Assert( i >= 0 && i <= 1 );
-		m_nSTATIC_LIGHT = i;
+		m_nSTATIC_LIGHT_VERTEX = i;
 #ifdef _DEBUG
-		m_bSTATIC_LIGHT = true;
+		m_bSTATIC_LIGHT_VERTEX = true;
+#endif	// _DEBUG
+	}
+
+	void SetSTATIC_LIGHT_LIGHTMAP( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nSTATIC_LIGHT_LIGHTMAP = i;
+#ifdef _DEBUG
+		m_bSTATIC_LIGHT_LIGHTMAP = true;
 #endif	// _DEBUG
 	}
 
@@ -231,11 +242,12 @@ public:
 #endif	// _DEBUG
 	}
 
-	vertexlit_and_unlit_generic_vs20_Dynamic_Index()
+	vertexlit_and_unlit_generic_vs20_Dynamic_Index( )
 	{
 		m_nCOMPRESSED_VERTS = 0;
 		m_nDYNAMIC_LIGHT = 0;
-		m_nSTATIC_LIGHT = 0;
+		m_nSTATIC_LIGHT_VERTEX = 0;
+		m_nSTATIC_LIGHT_LIGHTMAP = 0;
 		m_nDOWATERFOG = 0;
 		m_nSKINNING = 0;
 		m_nLIGHTING_PREVIEW = 0;
@@ -243,7 +255,8 @@ public:
 #ifdef _DEBUG
 		m_bCOMPRESSED_VERTS = false;
 		m_bDYNAMIC_LIGHT = false;
-		m_bSTATIC_LIGHT = false;
+		m_bSTATIC_LIGHT_VERTEX = false;
+		m_bSTATIC_LIGHT_LIGHTMAP = false;
 		m_bDOWATERFOG = false;
 		m_bSKINNING = false;
 		m_bLIGHTING_PREVIEW = false;
@@ -253,12 +266,12 @@ public:
 
 	int GetIndex() const
 	{
-		Assert( m_bCOMPRESSED_VERTS && m_bDYNAMIC_LIGHT && m_bSTATIC_LIGHT && m_bDOWATERFOG && m_bSKINNING && m_bLIGHTING_PREVIEW && m_bNUM_LIGHTS );
-		return ( 1 * m_nCOMPRESSED_VERTS ) + ( 2 * m_nDYNAMIC_LIGHT ) + ( 4 * m_nSTATIC_LIGHT ) + ( 8 * m_nDOWATERFOG ) + ( 16 * m_nSKINNING ) + ( 32 * m_nLIGHTING_PREVIEW ) + ( 64 * m_nNUM_LIGHTS ) + 0;
+		Assert( m_bCOMPRESSED_VERTS && m_bDYNAMIC_LIGHT && m_bSTATIC_LIGHT_VERTEX && m_bSTATIC_LIGHT_LIGHTMAP && m_bDOWATERFOG && m_bSKINNING && m_bLIGHTING_PREVIEW && m_bNUM_LIGHTS );
+		return ( 1 * m_nCOMPRESSED_VERTS ) + ( 2 * m_nDYNAMIC_LIGHT ) + ( 4 * m_nSTATIC_LIGHT_VERTEX ) + ( 8 * m_nSTATIC_LIGHT_LIGHTMAP ) + ( 16 * m_nDOWATERFOG ) + ( 32 * m_nSKINNING ) + ( 64 * m_nLIGHTING_PREVIEW ) + ( 128 * m_nNUM_LIGHTS ) + 0;
 	}
 };
 
-#define shaderDynamicTest_vertexlit_and_unlit_generic_vs20 vsh_forgot_to_set_dynamic_COMPRESSED_VERTS + vsh_forgot_to_set_dynamic_DYNAMIC_LIGHT + vsh_forgot_to_set_dynamic_STATIC_LIGHT + vsh_forgot_to_set_dynamic_DOWATERFOG + vsh_forgot_to_set_dynamic_SKINNING + vsh_forgot_to_set_dynamic_LIGHTING_PREVIEW + vsh_forgot_to_set_dynamic_NUM_LIGHTS
+#define shaderDynamicTest_vertexlit_and_unlit_generic_vs20 vsh_forgot_to_set_dynamic_COMPRESSED_VERTS + vsh_forgot_to_set_dynamic_DYNAMIC_LIGHT + vsh_forgot_to_set_dynamic_STATIC_LIGHT_VERTEX + vsh_forgot_to_set_dynamic_STATIC_LIGHT_LIGHTMAP + vsh_forgot_to_set_dynamic_DOWATERFOG + vsh_forgot_to_set_dynamic_SKINNING + vsh_forgot_to_set_dynamic_LIGHTING_PREVIEW + vsh_forgot_to_set_dynamic_NUM_LIGHTS
 
 
 #endif	// VERTEXLIT_AND_UNLIT_GENERIC_VS20_H

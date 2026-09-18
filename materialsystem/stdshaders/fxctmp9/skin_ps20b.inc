@@ -189,7 +189,7 @@ public:
 #endif	// _DEBUG
 	}
 
-	skin_ps20b_Static_Index()
+	skin_ps20b_Static_Index( )
 	{
 		m_nCONVERT_TO_SRGB = 0;
 		m_nCUBEMAP = 0;
@@ -226,7 +226,7 @@ public:
 	int GetIndex() const
 	{
 		Assert( m_bCONVERT_TO_SRGB && m_bCUBEMAP && m_bSELFILLUM && m_bSELFILLUMFRESNEL && m_bFLASHLIGHT && m_bLIGHTWARPTEXTURE && m_bPHONGWARPTEXTURE && m_bWRINKLEMAP && m_bDETAIL_BLEND_MODE && m_bDETAILTEXTURE && m_bRIMLIGHT && m_bFLASHLIGHTDEPTHFILTERMODE && m_bFASTPATH_NOBUMP && m_bBLENDTINTBYBASEALPHA );
-		return ( 80 * m_nCONVERT_TO_SRGB ) + ( 80 * m_nCUBEMAP ) + ( 160 * m_nSELFILLUM ) + ( 320 * m_nSELFILLUMFRESNEL ) + ( 640 * m_nFLASHLIGHT ) + ( 1280 * m_nLIGHTWARPTEXTURE ) + ( 2560 * m_nPHONGWARPTEXTURE ) + ( 5120 * m_nWRINKLEMAP ) + ( 10240 * m_nDETAIL_BLEND_MODE ) + ( 71680 * m_nDETAILTEXTURE ) + ( 143360 * m_nRIMLIGHT ) + ( 286720 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 860160 * m_nFASTPATH_NOBUMP ) + ( 1720320 * m_nBLENDTINTBYBASEALPHA ) + 0;
+		return ( 160 * m_nCONVERT_TO_SRGB ) + ( 160 * m_nCUBEMAP ) + ( 320 * m_nSELFILLUM ) + ( 640 * m_nSELFILLUMFRESNEL ) + ( 1280 * m_nFLASHLIGHT ) + ( 2560 * m_nLIGHTWARPTEXTURE ) + ( 5120 * m_nPHONGWARPTEXTURE ) + ( 10240 * m_nWRINKLEMAP ) + ( 20480 * m_nDETAIL_BLEND_MODE ) + ( 143360 * m_nDETAILTEXTURE ) + ( 286720 * m_nRIMLIGHT ) + ( 573440 * m_nFLASHLIGHTDEPTHFILTERMODE ) + ( 1720320 * m_nFASTPATH_NOBUMP ) + ( 3440640 * m_nBLENDTINTBYBASEALPHA ) + 0;
 	}
 };
 
@@ -240,12 +240,14 @@ class skin_ps20b_Dynamic_Index
 	unsigned int m_nNUM_LIGHTS : 3;
 	unsigned int m_nWRITE_DEPTH_TO_DESTALPHA : 2;
 	unsigned int m_nFLASHLIGHTSHADOWS : 2;
+	unsigned int m_nPHONG_USE_EXPONENT_FACTOR : 2;
 #ifdef _DEBUG
 	bool m_bWRITEWATERFOGTODESTALPHA : 1;
 	bool m_bPIXELFOGTYPE : 1;
 	bool m_bNUM_LIGHTS : 1;
 	bool m_bWRITE_DEPTH_TO_DESTALPHA : 1;
 	bool m_bFLASHLIGHTSHADOWS : 1;
+	bool m_bPHONG_USE_EXPONENT_FACTOR : 1;
 #endif	// _DEBUG
 public:
 	void SetWRITEWATERFOGTODESTALPHA( int i )
@@ -293,30 +295,41 @@ public:
 #endif	// _DEBUG
 	}
 
-	skin_ps20b_Dynamic_Index()
+	void SetPHONG_USE_EXPONENT_FACTOR( int i )
+	{
+		Assert( i >= 0 && i <= 1 );
+		m_nPHONG_USE_EXPONENT_FACTOR = i;
+#ifdef _DEBUG
+		m_bPHONG_USE_EXPONENT_FACTOR = true;
+#endif	// _DEBUG
+	}
+
+	skin_ps20b_Dynamic_Index( )
 	{
 		m_nWRITEWATERFOGTODESTALPHA = 0;
 		m_nPIXELFOGTYPE = 0;
 		m_nNUM_LIGHTS = 0;
 		m_nWRITE_DEPTH_TO_DESTALPHA = 0;
 		m_nFLASHLIGHTSHADOWS = 0;
+		m_nPHONG_USE_EXPONENT_FACTOR = 0;
 #ifdef _DEBUG
 		m_bWRITEWATERFOGTODESTALPHA = false;
 		m_bPIXELFOGTYPE = false;
 		m_bNUM_LIGHTS = false;
 		m_bWRITE_DEPTH_TO_DESTALPHA = false;
 		m_bFLASHLIGHTSHADOWS = false;
+		m_bPHONG_USE_EXPONENT_FACTOR = false;
 #endif	// _DEBUG
 	}
 
 	int GetIndex() const
 	{
-		Assert( m_bWRITEWATERFOGTODESTALPHA && m_bPIXELFOGTYPE && m_bNUM_LIGHTS && m_bWRITE_DEPTH_TO_DESTALPHA && m_bFLASHLIGHTSHADOWS );
-		return ( 1 * m_nWRITEWATERFOGTODESTALPHA ) + ( 2 * m_nPIXELFOGTYPE ) + ( 4 * m_nNUM_LIGHTS ) + ( 20 * m_nWRITE_DEPTH_TO_DESTALPHA ) + ( 40 * m_nFLASHLIGHTSHADOWS ) + 0;
+		Assert( m_bWRITEWATERFOGTODESTALPHA && m_bPIXELFOGTYPE && m_bNUM_LIGHTS && m_bWRITE_DEPTH_TO_DESTALPHA && m_bFLASHLIGHTSHADOWS && m_bPHONG_USE_EXPONENT_FACTOR );
+		return ( 1 * m_nWRITEWATERFOGTODESTALPHA ) + ( 2 * m_nPIXELFOGTYPE ) + ( 4 * m_nNUM_LIGHTS ) + ( 20 * m_nWRITE_DEPTH_TO_DESTALPHA ) + ( 40 * m_nFLASHLIGHTSHADOWS ) + ( 80 * m_nPHONG_USE_EXPONENT_FACTOR ) + 0;
 	}
 };
 
-#define shaderDynamicTest_skin_ps20b psh_forgot_to_set_dynamic_WRITEWATERFOGTODESTALPHA + psh_forgot_to_set_dynamic_PIXELFOGTYPE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_WRITE_DEPTH_TO_DESTALPHA + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS
+#define shaderDynamicTest_skin_ps20b psh_forgot_to_set_dynamic_WRITEWATERFOGTODESTALPHA + psh_forgot_to_set_dynamic_PIXELFOGTYPE + psh_forgot_to_set_dynamic_NUM_LIGHTS + psh_forgot_to_set_dynamic_WRITE_DEPTH_TO_DESTALPHA + psh_forgot_to_set_dynamic_FLASHLIGHTSHADOWS + psh_forgot_to_set_dynamic_PHONG_USE_EXPONENT_FACTOR
 
 
 #endif	// SKIN_PS20B_H
