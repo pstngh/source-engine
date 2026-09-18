@@ -5033,7 +5033,10 @@ bool CCSGameRules::IsBuyTimeElapsed()
 
 int CCSGameRules::DefaultFOV()
 {
-	return 90;
+	// Base (4:3) horizontal FOV. The client scales this by the screen aspect
+	// ratio (ScaleFOVByWidthRatio in view.cpp), so 16:9 ends up around 96.
+	// CBasePlayer::SetDefaultFOV keeps every CS player pinned to this value.
+	return 80;
 }
 
 const CViewVectors* CCSGameRules::GetViewVectors() const

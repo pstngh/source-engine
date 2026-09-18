@@ -838,8 +838,13 @@ CON_COMMAND( fov, "Change players FOV" )
 	{
 		if ( args.ArgC() > 1 )
 		{
+#if defined( CSTRIKE_DLL )
+			// The base FOV is locked in Counter-Strike (see CBasePlayer::SetDefaultFOV).
+			ClientPrint( pPlayer, HUD_PRINTCONSOLE, UTIL_VarArgs( "\"fov\" is locked to \"%d\" in this build\n", pPlayer->GetDefaultFOV() ) );
+#else
 			int nFOV = atoi( args[1] );
 			pPlayer->SetDefaultFOV( nFOV );
+#endif
 		}
 		else
 		{

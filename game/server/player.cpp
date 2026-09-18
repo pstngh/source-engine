@@ -8494,6 +8494,12 @@ float CBasePlayer::GetFOVDistanceAdjustFactorForNetworking()
 //-----------------------------------------------------------------------------
 void CBasePlayer::SetDefaultFOV( int FOV )
 {
+#if defined( CSTRIKE_DLL )
+	// Counter-Strike: the base FOV is locked to CCSGameRules::DefaultFOV().
+	// This is the single choke point for the "fov" command, fov_desired,
+	// tool/foundry requests and save restore, so none of them can move it.
+	FOV = 0;
+#endif
 	m_iDefaultFOV = ( FOV == 0 ) ? g_pGameRules->DefaultFOV() : FOV;
 }
 

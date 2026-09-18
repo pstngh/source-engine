@@ -103,15 +103,18 @@ CGlobalVars g_ServerGlobalVariables( false );
 
 static int	current_skill;
 
+// Cheats are always enabled in this build. sv_cheats is pinned to 1 through the
+// min/max clamp on the ConVar below, so every write (console, cfg files, the
+// commentary/new-game dialogs, replicated values pushed by a remote server,
+// RevertFlaggedConVars, ...) lands back on 1. The change callback only keeps the
+// string form tidy: a clamped float write would otherwise leave "1.000000".
 static void SV_CheatsChanged_f( IConVar *pConVar, const char *pOldString, float flOldValue )
 {
 	ConVarRef var( pConVar );
-	if ( var.GetInt() == 0 )
+	if ( var.GetInt() != 1 || Q_strcmp( var.GetString(), "1" ) != 0 )
 	{
-		// cheats were disabled, revert all cheat cvars to their default values
-		g_pCVar->RevertFlaggedConVars( FCVAR_CHEAT );
-
-		DevMsg( "FCVAR_CHEAT cvars reverted to defaults.\n" );
+		DevMsg( "sv_cheats is locked to 1 in this build.\n" );
+		var.SetValue( "1" );
 	}
 }
 
@@ -194,7 +197,7 @@ ConVar	sv_pure_trace( "sv_pure_trace", "0", 0, "If set to 1, the server will pri
 ConVar	sv_pure_consensus( "sv_pure_consensus", "5", 0, "Minimum number of file hashes to agree to form a consensus." );
 ConVar	sv_pure_retiretime( "sv_pure_retiretime", "900", 0, "Seconds of server idle time to flush the sv_pure file hash cache." );
 
-ConVar  sv_cheats( "sv_cheats", "0", FCVAR_NOTIFY|FCVAR_REPLICATED, "Allow cheats on server", SV_CheatsChanged_f );
+ConVar  sv_cheats( "sv_cheats", "1", FCVAR_NOTIFY|FCVAR_REPLICATED, "Allow cheats on server (always on in this build)", true, 1, true, 1, SV_CheatsChanged_f );
 ConVar  sv_lan( "sv_lan", "0", 0, "Server is a lan server ( no heartbeat, no authentication, no non-class C addresses )" );
 
 

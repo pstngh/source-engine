@@ -66,7 +66,7 @@ void __MsgFunc_MatchEndConditions( bf_read &msg );
 
 class CHudChat;
 
-ConVar default_fov( "default_fov", "90", FCVAR_CHEAT );
+ConVar default_fov( "default_fov", "80", FCVAR_CHEAT );
 
 IClientMode *g_pClientMode = NULL;
 
