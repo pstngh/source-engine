@@ -222,6 +222,11 @@ public:
 
 	CNetworkVar( float, m_fAccuracyPenalty );
 
+	// Consume rounds from the active magazine unless infinite ammo is enabled.
+	// Keeping this in the shared weapon base makes client prediction and the
+	// authoritative server follow the same rule.
+	void ConsumePrimaryAmmo( int count = 1 );
+
 	//=============================================================================
 	// HPE_END
 	//=============================================================================
@@ -285,5 +290,7 @@ private:
 };
 
 extern ConVar weapon_accuracy_model;
+extern ConVar sv_infinite_ammo;
+extern ConVar weapon_no_spread;
 
 #endif // WEAPON_CSBASE_H

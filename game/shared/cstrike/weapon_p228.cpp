@@ -139,7 +139,7 @@ void CWeaponP228::PrimaryAttack( void )
 
 	pPlayer->m_iShotsFired++;
 
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 	
 	 pPlayer->DoMuzzleFlash();
 	//SetPlayerShieldAnim();

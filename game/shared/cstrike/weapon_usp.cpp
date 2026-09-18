@@ -300,7 +300,7 @@ void CWeaponUSP::PrimaryAttack()
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = gpGlobals->curtime + flCycleTime;
 
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 

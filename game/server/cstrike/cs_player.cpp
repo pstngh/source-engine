@@ -90,6 +90,24 @@ const float CycleLatchInterval = 0.2f;
 ConVar cs_ShowStateTransitions( "cs_ShowStateTransitions", "-2", FCVAR_CHEAT, "cs_ShowStateTransitions <ent index or -1 for all>. Show player state transitions." );
 ConVar sv_max_usercmd_future_ticks( "sv_max_usercmd_future_ticks", "8", 0, "Prevents clients from running usercmds too far in the future. Prevents speed hacks." );
 ConVar sv_motd_unload_on_dismissal( "sv_motd_unload_on_dismissal", "0", 0, "If enabled, the MOTD contents will be unloaded when the player closes the MOTD." );
+
+static void SvInfiniteMoneyChangeCallback( IConVar *pConVar, const char *pOldValue, float flOldValue )
+{
+	ConVarRef infiniteMoney( pConVar );
+	if ( !infiniteMoney.IsValid() || !infiniteMoney.GetBool() )
+		return;
+
+	for ( int i = 1; i <= MAX_PLAYERS; ++i )
+	{
+		CCSPlayer *pPlayer = ToCSPlayer( UTIL_PlayerByIndex( i ) );
+		if ( pPlayer )
+		{
+			pPlayer->AddAccount( 16000, false );
+		}
+	}
+}
+
+ConVar sv_infinite_money( "sv_infinite_money", "1", FCVAR_NOTIFY, "Keep every Counter-Strike player at the maximum $16000 balance.", SvInfiniteMoneyChangeCallback );
 //=============================================================================
 // HPE_BEGIN:
 // [Forrest] Allow MVP to be turned off for a server
@@ -450,7 +468,7 @@ CCSPlayer::CCSPlayer()
 	m_iLastWeaponFireUsercmd = 0;
 	m_iAddonBits = 0;
 	m_bEscaped = false;
-	m_iAccount = 0;
+	m_iAccount = sv_infinite_money.GetBool() ? 16000 : 0;
 
 	m_bIsVIP = false;
 	m_iClass = (int)CS_CLASS_NONE;
@@ -757,7 +775,7 @@ void CCSPlayer::InitialSpawn( void )
 	// because of the bots' timing for purchasing weapons/items.
 	if ( IsBot() )
 	{
-		m_iAccount = CSGameRules()->GetStartMoney();
+		m_iAccount = sv_infinite_money.GetBool() ? 16000 : CSGameRules()->GetStartMoney();
 	}
 
 	if ( !engine->IsDedicatedServer() && TheNavMesh->IsOutOfDate() && this == UTIL_GetListenServerHost() )
@@ -2428,6 +2446,9 @@ void CCSPlayer::AddAccount( int amount, bool bTrackChange, bool bItemBought, con
 	if ( m_iAccount < 0 )
 		m_iAccount = 0;
 	else if ( m_iAccount > 16000 )
+		m_iAccount = 16000;
+
+	if ( sv_infinite_money.GetBool() )
 		m_iAccount = 16000;
 }
 
@@ -8264,4 +8285,3 @@ void UTIL_AwardMoneyToTeam( int iAmount, int iTeam, CBaseEntity *pIgnore )
 		pPlayer->AddAccount( iAmount );
 	}
 }
-

@@ -133,7 +133,7 @@ void CWeaponXM1014::PrimaryAttack()
 	//pPlayer->m_iWeaponVolume = LOUD_GUN_VOLUME;
 	//pPlayer->m_iWeaponFlash = BRIGHT_GUN_FLASH;
 
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 	pPlayer->DoMuzzleFlash();
 
 	// player "shoot" animation
@@ -250,8 +250,8 @@ bool CWeaponXM1014::Reload()
 		
 		CCSPlayer *pPlayer = GetPlayerOwner();
 
-		if ( pPlayer )
-			 pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		if ( pPlayer && !sv_infinite_ammo.GetBool() )
+			pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
 
 		m_reloadState = 1;
 	}

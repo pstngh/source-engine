@@ -160,7 +160,7 @@ void CDEagle::PrimaryAttack()
 
 	pPlayer->m_iShotsFired++;
 
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 
 	pPlayer->DoMuzzleFlash();
 
@@ -232,4 +232,3 @@ void CDEagle::WeaponIdle()
 	//if ( FBitSet(m_iWeaponState, WPNSTATE_SHIELD_DRAWN) )
 	//	 SendWeaponAnim( SHIELDGUN_DRAWN_IDLE, UseDecrement() ? 1:0 );
 }
-

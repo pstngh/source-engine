@@ -326,7 +326,10 @@ void CBaseCSGrenade::ItemPostFrame()
 	//-----------------------------------------------------------------------------
 	void CBaseCSGrenade::DecrementAmmo( CBaseCombatCharacter *pOwner )
 	{
-		pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		if ( !sv_infinite_ammo.GetBool() )
+		{
+			pOwner->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		}
 	}
 
 	void CBaseCSGrenade::StartGrenadeThrow()
@@ -435,4 +438,3 @@ void CBaseCSGrenade::ItemPostFrame()
 	}
 
 #endif
-

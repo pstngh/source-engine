@@ -152,7 +152,7 @@ void CWeaponFamas::ItemPostFrame()
 // GOOSEMAN : FireRemaining used by Glock18
 void CWeaponFamas::FireRemaining()
 {
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 
 	if (m_iClip1 < 0)
 	{
@@ -239,5 +239,4 @@ void CWeaponFamas::PrimaryAttack()
 	else
 		pPlayer->KickBack ( 0.625, 0.375, 0.25, 0.0125, 3.5, 2.25, 8 );
 }
-
 

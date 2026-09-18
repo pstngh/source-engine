@@ -209,7 +209,7 @@ void CWeaponGlock::PrimaryAttack()
 
 	pPlayer->m_iShotsFired++;
 
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 
 	pPlayer->DoMuzzleFlash();
 
@@ -281,7 +281,7 @@ void CWeaponGlock::FireRemaining( float fSpread )
 		m_fNextBurstShot = 0.0f;
 		return;
 	}
-	--m_iClip1;
+	ConsumePrimaryAmmo();
 
 	// TODO FIXME damage = 18, rangemode 0.9
 

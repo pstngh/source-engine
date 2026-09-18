@@ -125,7 +125,7 @@ void CWeaponM3::PrimaryAttack()
 
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
 
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 	pPlayer->DoMuzzleFlash();
 
 	// player "shoot" animation
@@ -240,8 +240,8 @@ bool CWeaponM3::Reload()
 		
 		CCSPlayer *pPlayer = GetPlayerOwner();
 
-		if ( pPlayer )
-			 pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
+		if ( pPlayer && !sv_infinite_ammo.GetBool() )
+			pPlayer->RemoveAmmo( 1, m_iPrimaryAmmoType );
 
 		m_reloadState = 1;
 	}

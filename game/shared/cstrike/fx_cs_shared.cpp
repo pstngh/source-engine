@@ -117,6 +117,12 @@ void FX_FireBullets(
 	float flSoundTime
 	)
 {
+	if ( weapon_no_spread.GetBool() )
+	{
+		fInaccuracy = 0.0f;
+		fSpread = 0.0f;
+	}
+
 	bool bDoEffects = true;
 
 #ifdef CLIENT_DLL
@@ -342,4 +348,3 @@ void FX_PlantBomb( int iPlayerIndex, const Vector &vOrigin, PlantBombOption_t op
 	TE_PlantBomb( iPlayerIndex, vOrigin, option );
 #endif
 }
-

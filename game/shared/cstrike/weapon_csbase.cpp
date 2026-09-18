@@ -38,6 +38,8 @@
 
 
 ConVar weapon_accuracy_model( "weapon_accuracy_model", "2", FCVAR_REPLICATED | FCVAR_DEVELOPMENTONLY | FCVAR_ARCHIVE );
+ConVar sv_infinite_ammo( "sv_infinite_ammo", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Prevent Counter-Strike weapons and grenades from consuming ammunition." );
+ConVar weapon_no_spread( "weapon_no_spread", "1", FCVAR_REPLICATED | FCVAR_NOTIFY, "Make Counter-Strike bullets perfectly accurate." );
 
 
 // ----------------------------------------------------------------------------- //
@@ -545,7 +547,10 @@ void CWeaponCSBase::ItemPostFrame()
 
 		// Add them to the clip
 		m_iClip1 += j;
-		pPlayer->RemoveAmmo( j, m_iPrimaryAmmoType );
+		if ( !sv_infinite_ammo.GetBool() )
+		{
+			pPlayer->RemoveAmmo( j, m_iPrimaryAmmoType );
+		}
 
 		m_bInReload = false;
 	}
@@ -718,6 +723,15 @@ float CWeaponCSBase::GetSpread() const
 		return 0.0f;
 
 	return GetCSWpnData().m_fSpread[m_weaponMode];
+}
+
+
+void CWeaponCSBase::ConsumePrimaryAmmo( int count )
+{
+	if ( !sv_infinite_ammo.GetBool() )
+	{
+		m_iClip1 -= count;
+	}
 }
 
 

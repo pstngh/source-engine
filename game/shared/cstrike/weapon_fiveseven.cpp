@@ -137,7 +137,7 @@ void CWeaponFiveSeven::PrimaryAttack()
 
 	pPlayer->m_iShotsFired++;
 
-	m_iClip1--;
+	ConsumePrimaryAmmo();
 	pPlayer->DoMuzzleFlash();
 
 	SendWeaponAnim( ACT_VM_PRIMARYATTACK );
