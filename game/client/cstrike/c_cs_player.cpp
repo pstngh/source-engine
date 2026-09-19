@@ -75,7 +75,9 @@ extern ConVar	spec_freeze_distance_max;
 
 ConVar cl_left_hand_ik( "cl_left_hand_ik", "0", 0, "Attach player's left hand to rifle with IK." );
 ConVar cl_mohaa_viewmodel_motion( "cl_mohaa_viewmodel_motion", "1", FCVAR_ARCHIVE,
-	"Apply OpenMoHAA-style crouch, airborne, and running weapon offsets." );
+	"Enable first-person weapon movement and bob (0 disables both)." );
+ConVar cl_viewmodel_motion_scale( "cl_viewmodel_motion_scale", "0.25", FCVAR_ARCHIVE,
+	"Scale running, crouching, and airborne weapon movement (0 disables offsets).", true, 0.0f, true, 1.0f );
 
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
 
@@ -900,7 +902,7 @@ int C_CSPlayer::PlayerClass() const
 
 bool C_CSPlayer::IsInBuyZone()
 {
-	return m_bInBuyZone;
+	return m_bInBuyZone || ( CSGameRules() && CSGameRules()->IsDeathmatchMode() );
 }
 
 bool C_CSPlayer::CanShowTeamMenu() const
@@ -1581,7 +1583,7 @@ void C_CSPlayer::CalcViewModelView( const Vector &eyeOrigin, const QAngle &eyeAn
 	offsetAngles[ROLL] *= 0.75f;
 	AngleVectors( offsetAngles, &forward, &right, &up );
 
-	if ( cl_mohaa_viewmodel_motion.GetBool() )
+	if ( cl_mohaa_viewmodel_motion.GetBool() && cl_viewmodel_motion_scale.GetFloat() > 0.0f )
 	{
 		// Match the defaults of OpenMoHAA's vm_offset_* cvars. Source's weapon
 		// geometry remains different, so these are camera-relative movement offsets.
@@ -1600,6 +1602,7 @@ void C_CSPlayer::CalcViewModelView( const Vector &eyeOrigin, const QAngle &eyeAn
 
 		if ( target.LengthSqr() > 64.0f )
 			target *= 8.0f / target.Length();
+		target *= cl_viewmodel_motion_scale.GetFloat();
 
 		static C_CSPlayer *lastPlayer = NULL;
 		static Vector current( 0, 0, 0 );

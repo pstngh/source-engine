@@ -1157,6 +1157,15 @@ void CC_God_f (void)
 #endif
 
 	pPlayer->ToggleFlag( FL_GODMODE );
+#if defined( CSTRIKE_DLL )
+	if ( !engine->IsDedicatedServer() && pPlayer == UTIL_GetListenServerHost() )
+	{
+		// Keep a manual god toggle in sync with the host's respawn setting.
+		ConVarRef localGodmode( "sv_local_godmode" );
+		if ( localGodmode.IsValid() )
+			localGodmode.SetValue( ( pPlayer->GetFlags() & FL_GODMODE ) != 0 );
+	}
+#endif
 	if (!(pPlayer->GetFlags() & FL_GODMODE ) )
 		ClientPrint( pPlayer, HUD_PRINTCONSOLE, "godmode OFF\n");
 	else

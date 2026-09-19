@@ -1632,6 +1632,10 @@ bool CWeaponCSBase::IsUseable()
 
 #if defined( CLIENT_DLL )
 
+	extern ConVar cl_mohaa_viewmodel_motion;
+	ConVar cl_viewmodel_bob_scale( "cl_viewmodel_bob_scale", "0.2", FCVAR_ARCHIVE,
+		"Scale first-person weapon bob (0 disables bob).", true, 0.0f, true, 1.0f );
+
 	static Vector g_mohaaViewmodelSway( 0, 0, 0 );
 
 	float CWeaponCSBase::CalcViewmodelBob( void )
@@ -1680,6 +1684,9 @@ bool CWeaponCSBase::IsUseable()
 
 	void CWeaponCSBase::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
 	{
+		if ( !cl_mohaa_viewmodel_motion.GetBool() || cl_viewmodel_bob_scale.GetFloat() <= 0.0f )
+			return;
+
 		CalcViewmodelBob();
 
 		QAngle offsetAngles = angles;
@@ -1688,7 +1695,7 @@ bool CWeaponCSBase::IsUseable()
 		Vector forward, right, up;
 		AngleVectors( offsetAngles, &forward, &right, &up );
 		// OpenMoHAA's side axis is left; Source's AngleVectors returns right.
-		origin += forward * g_mohaaViewmodelSway.x - right * g_mohaaViewmodelSway.y + up * g_mohaaViewmodelSway.z;
+		origin += ( forward * g_mohaaViewmodelSway.x - right * g_mohaaViewmodelSway.y + up * g_mohaaViewmodelSway.z ) * cl_viewmodel_bob_scale.GetFloat();
 	}
 
 #else

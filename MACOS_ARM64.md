@@ -75,8 +75,11 @@ bind c +leanright
 
 The first-person weapon camera uses an 80-degree base FOV with OpenMoHAA-style
 movement offsets, sway, and scoped mouse sensitivity. `cl_drawviewmodel 0`
-hides the weapon; its default is `2`. `cl_mohaa_viewmodel_motion 0` disables the
-extra running, crouching, and airborne offsets. Counter-Strike weapon models
+hides the weapon; its default is `2`. Weapon movement is reduced by default:
+`cl_viewmodel_motion_scale 0.25` controls running, crouching, and airborne
+offsets, and `cl_viewmodel_bob_scale 0.2` controls sway. Set either scale to `0`
+to disable that part, or `cl_mohaa_viewmodel_motion 0` to disable both.
+Counter-Strike weapon models
 still have their original geometry and animations. The AWP shows the regular
 crosshair while unscoped; all four sniper rifles now toggle directly between
 unscoped and their original first 40-degree zoom level.
@@ -87,7 +90,8 @@ Games created from the menu start in free-for-all mode by default, with automati
 respawning and no freeze time. On a local/listen server, open the developer
 console and use:
 
-- `sv_cheats 1; god` to toggle working invulnerability for the host player.
+- `sv_local_godmode 0` to turn off the host's default invulnerability; set it
+  back to `1` to restore it. The setting is saved and survives respawns.
 - `tdm` to start team deathmatch with automatic respawning.
 - `ffa` to start free-for-all; all other players and bots become enemies.
 - `classic` to restore the normal team and round rules.
@@ -99,4 +103,6 @@ the delay with `mp_deathmatch_respawn_time`, for example
 FFA now chooses safe positions from the map's navigation mesh for humans and
 bots, throughout the playable map. If no usable mesh area is found, it uses
 the map's normal spawn entities. Set `mp_ffa_nav_spawns 0` to use only the map
-spawn entities.
+spawn entities. In TDM and FFA, players and bots can buy from anywhere for the
+whole round; classic mode keeps the map's usual buy zones and buy timer. Your
+own hit blood spray is hidden locally; enemy blood spray still appears.

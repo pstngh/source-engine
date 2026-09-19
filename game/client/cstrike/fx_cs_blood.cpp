@@ -476,6 +476,10 @@ void GetBloodColorForTeam( int iTeam, unsigned char &r, unsigned char &g, unsign
 //-----------------------------------------------------------------------------
 void CSBloodSprayCallback( const CEffectData &data )
 {
+	C_CSPlayer *localPlayer = C_CSPlayer::GetLocalCSPlayer();
+	if ( localPlayer && data.entindex() == localPlayer->entindex() )
+		return;
+
 	FX_CS_BloodSpray( data.m_vOrigin, data.m_vNormal, data.m_flMagnitude );
 }
 

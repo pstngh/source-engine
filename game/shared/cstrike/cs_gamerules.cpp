@@ -5144,7 +5144,7 @@ float CCSGameRules::GetBuyTimeLength() const
 
 bool CCSGameRules::IsBuyTimeElapsed()
 {
-	return ( GetRoundElapsedTime() > GetBuyTimeLength() );
+	return !IsDeathmatchMode() && ( GetRoundElapsedTime() > GetBuyTimeLength() );
 }
 
 int CCSGameRules::DefaultFOV()

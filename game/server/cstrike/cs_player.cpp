@@ -109,6 +109,25 @@ static void SvInfiniteMoneyChangeCallback( IConVar *pConVar, const char *pOldVal
 }
 
 ConVar sv_infinite_money( "sv_infinite_money", "1", FCVAR_NOTIFY, "Keep every Counter-Strike player at the maximum $16000 balance.", SvInfiniteMoneyChangeCallback );
+
+static void SvLocalGodmodeChangeCallback( IConVar *pConVar, const char *pOldValue, float flOldValue )
+{
+	if ( engine->IsDedicatedServer() )
+		return;
+
+	CCSPlayer *host = ToCSPlayer( UTIL_GetListenServerHost() );
+	if ( !host )
+		return;
+
+	ConVarRef localGodmode( pConVar );
+	if ( localGodmode.GetBool() )
+		host->AddFlag( FL_GODMODE );
+	else
+		host->RemoveFlag( FL_GODMODE );
+}
+
+ConVar sv_local_godmode( "sv_local_godmode", "1", FCVAR_ARCHIVE | FCVAR_NOTIFY,
+	"Keep the listen-server host invulnerable across respawns (0 disables).", SvLocalGodmodeChangeCallback );
 //=============================================================================
 // HPE_BEGIN:
 // [Forrest] Allow MVP to be turned off for a server
@@ -962,6 +981,10 @@ void CCSPlayer::Spawn()
 	m_cycleLatchTimer.Start( RandomFloat( 0.0f, CycleLatchInterval ) );
 
 	StockPlayerAmmo();
+
+	// BaseClass::Spawn resets flags, so restore the host's chosen god mode.
+	if ( !engine->IsDedicatedServer() && this == UTIL_GetListenServerHost() && sv_local_godmode.GetBool() )
+		AddFlag( FL_GODMODE );
 	}
 
 void CCSPlayer::ShowViewPortPanel( const char * name, bool bShow, KeyValues *data )
@@ -3148,7 +3171,7 @@ bool CCSPlayer::HasSecondaryWeapon( void )
 
 bool CCSPlayer::IsInBuyZone()
 {
-	return m_bInBuyZone && !IsVIP();
+	return ( m_bInBuyZone || CSGameRules()->IsDeathmatchMode() ) && !IsVIP();
 }
 
 bool CCSPlayer::CanPlayerBuy( bool display )
@@ -3189,7 +3212,7 @@ bool CCSPlayer::CanPlayerBuy( bool display )
 		return false;
 	}
 
-	if ( mp->m_bCTCantBuy && ( GetTeamNumber() == TEAM_CT ) )
+	if ( !mp->IsDeathmatchMode() && mp->m_bCTCantBuy && ( GetTeamNumber() == TEAM_CT ) )
 	{
 		if ( display == true )
 			ClientPrint( this, HUD_PRINTCENTER, "#CT_cant_buy" );
@@ -3197,7 +3220,7 @@ bool CCSPlayer::CanPlayerBuy( bool display )
 		return false;
 	}
 
-	if ( mp->m_bTCantBuy && ( GetTeamNumber() == TEAM_TERRORIST ) )
+	if ( !mp->IsDeathmatchMode() && mp->m_bTCantBuy && ( GetTeamNumber() == TEAM_TERRORIST ) )
 	{
 		if ( display == true )
 			ClientPrint( this, HUD_PRINTCENTER, "#Terrorist_cant_buy" );
@@ -3471,7 +3494,7 @@ BuyResult_e CCSPlayer::HandleCommand_Buy_Internal( const char* wpnName )
 // HPE_END
 //=============================================================================
 {
-	BuyResult_e result = CanPlayerBuy( false ) ? BUY_PLAYER_CANT_BUY : BUY_INVALID_ITEM; // set some defaults
+	BuyResult_e result = CanPlayerBuy( false ) ? BUY_INVALID_ITEM : BUY_PLAYER_CANT_BUY; // set some defaults
 
 	// translate the new weapon names to the old ones that are actually being used.
 	wpnName = GetTranslatedWeaponAlias(wpnName);
