@@ -2467,6 +2467,10 @@ bool CModelRender::DrawModelSetup( ModelRenderInfo_t &pInfo, DrawModelState_t *p
 	{
 		state.m_drawFlags |= STUDIORENDER_DRAW_NO_SHADOWS;
 	}
+	if ( pInfo.flags & STUDIO_HIDE_VIEWMODEL_HANDS )
+	{
+		state.m_drawFlags |= STUDIORENDER_DRAW_NO_HANDS;
+	}
 
 	if ( r_drawmodelstatsoverlay.GetInt() == 2)
 	{

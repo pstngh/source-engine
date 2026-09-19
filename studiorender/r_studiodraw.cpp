@@ -307,7 +307,7 @@ int CStudioRender::R_StudioRenderModel( IMatRenderContext *pRenderContext, int s
 		m_bSkippedMeshes = false;
 		m_bDrawTranslucentSubModels = false;
 		numTrianglesRendered += R_StudioRenderFinal( pRenderContext, skin, m_pStudioHdr->numbodyparts, pBodyPartInfo, 
-			pEntity, ppMaterials, pMaterialFlags, boneMask, lod, pColorMeshes );
+			pEntity, ppMaterials, pMaterialFlags, boneMask, lod, flags, pColorMeshes );
 	}
 	else
 	{
@@ -318,7 +318,7 @@ int CStudioRender::R_StudioRenderModel( IMatRenderContext *pRenderContext, int s
 	{
 		m_bDrawTranslucentSubModels = true;
 		numTrianglesRendered += R_StudioRenderFinal( pRenderContext, skin, m_pStudioHdr->numbodyparts, pBodyPartInfo, 
-			pEntity, ppMaterials, pMaterialFlags, boneMask, lod, pColorMeshes );
+			pEntity, ppMaterials, pMaterialFlags, boneMask, lod, flags, pColorMeshes );
 	}
 	return numTrianglesRendered;
 }
@@ -416,7 +416,7 @@ outputs: returns the number of triangles rendered.
 */
 int CStudioRender::R_StudioRenderFinal( IMatRenderContext *pRenderContext, 
 	int skin, int nBodyPartCount, BodyPartInfo_t *pBodyPartInfo, void /*IClientEntity*/ *pClientEntity,
-	IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, ColorMeshInfo_t *pColorMeshes )
+	IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, int drawFlags, ColorMeshInfo_t *pColorMeshes )
 {
 	VPROF("CStudioRender::R_StudioRenderFinal");
 
@@ -436,7 +436,7 @@ int CStudioRender::R_StudioRenderFinal( IMatRenderContext *pRenderContext,
 		m_VertexCache.SetModel( pBodyPartInfo[i].m_nSubModelIndex );
 
 		numTrianglesRendered += R_StudioDrawPoints( pRenderContext, skin, pClientEntity, 
-			ppMaterials, pMaterialFlags, boneMask, lod, pColorMeshes );
+			ppMaterials, pMaterialFlags, boneMask, lod, drawFlags, pColorMeshes );
 	}
 	return numTrianglesRendered;
 }
@@ -2902,7 +2902,7 @@ int CStudioRender::SortMeshes( int* pIndices, IMaterial **ppMaterials,
 //-----------------------------------------------------------------------------
 #pragma warning (disable:4189)
 int CStudioRender::R_StudioDrawPoints( IMatRenderContext *pRenderContext, int skin, void /*IClientEntity*/ *pClientEntity, 
-	IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, ColorMeshInfo_t *pColorMeshes )
+	IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, int drawFlags, ColorMeshInfo_t *pColorMeshes )
 {
 	VPROF( "R_StudioDrawPoints" );
 	int			i;
@@ -2945,6 +2945,12 @@ int CStudioRender::R_StudioDrawPoints( IMatRenderContext *pRenderContext, int sk
 	for ( i = 0; i < m_pSubModel->nummeshes; ++i)
 	{
 		mstudiomesh_t *pmesh = m_pSubModel->pMesh(i);
+		// Stock CS:S viewmodels all use v_hands, including the five models
+		// that combine their gun and hands into one body part.
+		if ( ( drawFlags & STUDIORENDER_DRAW_NO_HANDS ) &&
+			 !Q_stricmp( m_pStudioHdr->pTexture( pskinref[pmesh->material] )->pszName(), "v_hands" ) )
+			continue;
+
 		studiomeshdata_t *pMeshData = &m_pStudioMeshes[pmesh->meshid];
 		Assert( pMeshData );
 

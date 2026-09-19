@@ -1089,9 +1089,11 @@ void CWeaponCSBase::DefaultTouch(CBaseEntity *pOther)
 			 return;
 
 		// The AWP has a normal crosshair while unscoped; the scope draws its own reticle.
+		const bool bUnscopedAWP = GetWeaponID() == WEAPON_AWP &&
+			pPlayer->GetFOV() == pPlayer->GetDefaultFOV();
 		bool bCrosshairVisible = crosshair.GetBool() &&
 			( GetCSWpnData().m_WeaponType != WEAPONTYPE_SNIPER_RIFLE ||
-			  ( GetWeaponID() == WEAPON_AWP && pPlayer->GetFOV() == pPlayer->GetDefaultFOV() ) );
+			  bUnscopedAWP );
 
 		if ( !bCrosshairVisible 
 #if ALLOW_WEAPON_SPREAD_DISPLAY
@@ -1105,6 +1107,11 @@ void CWeaponCSBase::DefaultTouch(CBaseEntity *pOther)
 		int iCrosshairDistance;
 		int iBarSize = RoundFloatToInt(YRES(cl_crosshairsize.GetFloat()));
 		int iBarThickness = MAX( 1, RoundFloatToInt(YRES(cl_crosshairthickness.GetFloat())));
+		// The AWP's hip-fire spread is large. Use the M4A1's visual crosshair
+		// settings so its unscoped reticle matches the regular rifles.
+		const CCSWeaponInfo *pRifleCrosshairInfo = bUnscopedAWP ? GetWeaponInfo( WEAPON_M4A1 ) : NULL;
+		const CCSWeaponInfo &crosshairInfo = pRifleCrosshairInfo ? *pRifleCrosshairInfo : GetCSWpnData();
+		const int crosshairMode = pRifleCrosshairInfo ? Primary_Mode : m_weaponMode;
 
 		switch ( cl_dynamiccrosshair.GetInt() )
 		{
@@ -1112,14 +1119,23 @@ void CWeaponCSBase::DefaultTouch(CBaseEntity *pOther)
 		default:
 			{
 				// static crosshair
-				float fSpread = (GetCSWpnData().m_fSpread[m_weaponMode] + GetCSWpnData().m_fInaccuracyStand[m_weaponMode]) * 320.0f / tanf(fHalfFov);
+				float fSpread = (crosshairInfo.m_fSpread[crosshairMode] + crosshairInfo.m_fInaccuracyStand[crosshairMode]) * 320.0f / tanf(fHalfFov);
 				iCrosshairDistance = MAX( 0, RoundFloatToInt( YRES( fSpread * cl_crosshairspreadscale.GetFloat() ) ) );
 			}
 			break;
 
 		case 1:
 			{
-				float fSpread = (GetInaccuracy() + GetSpread()) * 320.0f / tanf(fHalfFov);
+				float visualSpread = GetInaccuracy() + GetSpread();
+				if ( pRifleCrosshairInfo )
+				{
+					const float rifleSpeed = crosshairInfo.m_flMaxSpeed;
+					visualSpread = crosshairInfo.m_fSpread[Primary_Mode] +
+						RemapValClamped( pPlayer->GetAbsVelocity().Length2D(),
+							rifleSpeed * CS_PLAYER_SPEED_DUCK_MODIFIER, rifleSpeed * 0.95f,
+							0.0f, crosshairInfo.m_fInaccuracyMove[Primary_Mode] );
+				}
+				float fSpread = visualSpread * 320.0f / tanf(fHalfFov);
 				iCrosshairDistance = MAX( 0, RoundFloatToInt( YRES( fSpread * cl_crosshairspreadscale.GetFloat() ) ) );
 			}
 			break;
@@ -1127,7 +1143,7 @@ void CWeaponCSBase::DefaultTouch(CBaseEntity *pOther)
 		case 2:
 		case 3:
 			{
-				float fCrosshairDistanceGoal = GetCSWpnData().m_iCrosshairMinDistance; // The minimum distance the crosshair can achieve...
+				float fCrosshairDistanceGoal = crosshairInfo.m_iCrosshairMinDistance; // The minimum distance the crosshair can achieve...
 
 				// legacy dynamic crosshair
 				if ( cl_dynamiccrosshair.GetInt() == 2 )
@@ -1141,7 +1157,7 @@ void CWeaponCSBase::DefaultTouch(CBaseEntity *pOther)
 				}
 
 				// [jpaquin] changed to only bump up the crosshair size if the player is still shooting or is spectating someone else
-				int iDeltaDistance = GetCSWpnData().m_iCrosshairDeltaDistance; // Amount by which the crosshair expands when shooting (per frame)
+				int iDeltaDistance = crosshairInfo.m_iCrosshairDeltaDistance; // Amount by which the crosshair expands when shooting (per frame)
 				if ( pPlayer->m_iShotsFired > m_iAmmoLastCheck && (pPlayer->m_nButtons & (IN_ATTACK|IN_ATTACK2)) )
 					fCrosshairDistanceGoal += iDeltaDistance;
 

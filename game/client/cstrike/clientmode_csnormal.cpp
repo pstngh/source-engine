@@ -68,7 +68,7 @@ class CHudChat;
 
 ConVar default_fov( "default_fov", "80", FCVAR_CHEAT );
 ConVar cl_drawviewmodel( "cl_drawviewmodel", "2", FCVAR_ARCHIVE,
-	"Draw the first-person weapon (0 = hidden, 1 or 2 = shown)." );
+	"Draw the first-person weapon (0 = hidden, 1 = gun only, 2 = gun and hands)." );
 
 IClientMode *g_pClientMode = NULL;
 

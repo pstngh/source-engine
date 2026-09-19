@@ -34,6 +34,7 @@
 
 #ifdef CSTRIKE_DLL
 	ConVar cl_righthand( "cl_righthand", "1", FCVAR_ARCHIVE, "Use right-handed view models." );
+	extern ConVar cl_drawviewmodel;
 #endif
 
 #ifdef TF_CLIENT_DLL
@@ -342,6 +343,11 @@ int C_BaseViewModel::InternalDrawModel( int flags )
 	CMatRenderContextPtr pRenderContext( materials );
 	if ( ShouldFlipViewModel() )
 		pRenderContext->CullMode( MATERIAL_CULLMODE_CW );
+
+#ifdef CSTRIKE_DLL
+	if ( cl_drawviewmodel.GetInt() == 1 )
+		flags |= STUDIO_HIDE_VIEWMODEL_HANDS;
+#endif
 
 	int ret = BaseClass::InternalDrawModel( flags );
 

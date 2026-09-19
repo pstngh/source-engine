@@ -10,6 +10,7 @@
 #include "c_cs_player.h"
 #include "c_playerresource.h"
 #include "c_cs_playerresource.h"
+#include "cs_gamerules.h"
 #include "vgui_entitypanel.h"
 #include "iclientmode.h"
 #include "vgui/ILocalize.h"
@@ -208,6 +209,14 @@ void CTargetID::Paint()
 			}
 			else
 			{
+				// In FFA every other player is an enemy, regardless of team.
+				if ( pLocalPlayer && ( CSGameRules()->IsFreeForAll() || !pPlayer->InSameTeam( pLocalPlayer ) ) )
+				{
+					m_iLastEntIndex = 0;
+					m_flLastChangeTime = 0.0f;
+					return;
+				}
+
 				c = GetColorForTargetTeam( pPlayer->GetTeamNumber() );
 
 				bShowPlayerName = true;

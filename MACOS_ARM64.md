@@ -74,14 +74,16 @@ bind c +leanright
 ```
 
 The first-person weapon camera uses an 80-degree base FOV with OpenMoHAA-style
-movement offsets, sway, and scoped mouse sensitivity. `cl_drawviewmodel 0`
-hides the weapon; its default is `2`. Weapon movement is reduced by default:
-`cl_viewmodel_motion_scale 0.25` controls running, crouching, and airborne
-offsets, and `cl_viewmodel_bob_scale 0.2` controls sway. Set either scale to `0`
+movement offsets, sway, and scoped mouse sensitivity. `cl_drawviewmodel` has
+three modes: `0` hides the viewmodel, `1` shows only the gun, and `2` shows the
+gun and hands (the default). The weapon stays at its standing height while
+moving and jumping. `cl_viewmodel_motion_scale 0.25` controls a small crouch
+offset, and `cl_viewmodel_bob_scale 0.2` controls sway. Set either scale to `0`
 to disable that part, or `cl_mohaa_viewmodel_motion 0` to disable both.
 Counter-Strike weapon models
 still have their original geometry and animations. The AWP shows the regular
-crosshair while unscoped; all four sniper rifles now toggle directly between
+crosshair while unscoped, sized like a standard rifle crosshair. Enemy names
+are hidden when you aim at them. All four sniper rifles toggle directly between
 unscoped and their original first 40-degree zoom level.
 
 ## Local practice modes

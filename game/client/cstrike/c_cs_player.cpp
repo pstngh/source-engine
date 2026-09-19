@@ -77,7 +77,7 @@ ConVar cl_left_hand_ik( "cl_left_hand_ik", "0", 0, "Attach player's left hand to
 ConVar cl_mohaa_viewmodel_motion( "cl_mohaa_viewmodel_motion", "1", FCVAR_ARCHIVE,
 	"Enable first-person weapon movement and bob (0 disables both)." );
 ConVar cl_viewmodel_motion_scale( "cl_viewmodel_motion_scale", "0.25", FCVAR_ARCHIVE,
-	"Scale running, crouching, and airborne weapon movement (0 disables offsets).", true, 0.0f, true, 1.0f );
+	"Scale the small crouch weapon offset (0 disables it).", true, 0.0f, true, 1.0f );
 
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
 
@@ -1585,23 +1585,10 @@ void C_CSPlayer::CalcViewModelView( const Vector &eyeOrigin, const QAngle &eyeAn
 
 	if ( cl_mohaa_viewmodel_motion.GetBool() && cl_viewmodel_motion_scale.GetFloat() > 0.0f )
 	{
-		// Match the defaults of OpenMoHAA's vm_offset_* cvars. Source's weapon
-		// geometry remains different, so these are camera-relative movement offsets.
+		// Keep the weapon at its standing height while moving or jumping.
 		Vector target( 0, 0, 0 );
-		if ( !( GetFlags() & FL_ONGROUND ) )
-		{
-			target.Init( -3.0f, 1.5f, -6.0f );
-		}
-		else
-		{
-			if ( GetFlags() & FL_DUCKING )
-				target.Init( -0.5f, 2.25f, 0.2f );
-			const float move = RemapValClamped( GetLocalVelocity().Length2D(), 100.0f, 250.0f, 0.0f, 1.0f );
-			target += Vector( -2.0f, 1.5f, -4.0f ) * move;
-		}
-
-		if ( target.LengthSqr() > 64.0f )
-			target *= 8.0f / target.Length();
+		if ( ( GetFlags() & FL_ONGROUND ) && ( GetFlags() & FL_DUCKING ) )
+			target.Init( -0.5f, 0.5f, 0.0f );
 		target *= cl_viewmodel_motion_scale.GetFloat();
 
 		static C_CSPlayer *lastPlayer = NULL;

@@ -398,12 +398,12 @@ private:
 	int R_StudioDrawEyeball( IMatRenderContext *pRenderContext, mstudiomesh_t* pmesh,  studiomeshdata_t* pMeshData,
 		StudioModelLighting_t lighting, IMaterial *pMaterial, int lod );
 	int R_StudioDrawPoints( IMatRenderContext *pRenderContext, int skin, void /*IClientEntity*/ *pClientEntity, 
-		IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, ColorMeshInfo_t *pColorMeshes );
+		IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, int drawFlags, ColorMeshInfo_t *pColorMeshes );
 	int R_StudioDrawMesh( IMatRenderContext *pRenderContext, mstudiomesh_t* pmesh, studiomeshdata_t* pMeshData,
 		  				   StudioModelLighting_t lighting, IMaterial *pMaterial, ColorMeshInfo_t *pColorMeshes, int lod );
 	int R_StudioRenderFinal( IMatRenderContext *pRenderContext, 
 		int skin, int nBodyPartCount, BodyPartInfo_t *pBodyPartInfo, void /*IClientEntity*/ *pClientEntity,
-		IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, ColorMeshInfo_t *pColorMeshes = NULL );
+		IMaterial **ppMaterials, int *pMaterialFlags, int boneMask, int lod, int drawFlags, ColorMeshInfo_t *pColorMeshes = NULL );
 	int R_StudioDrawStaticMesh( IMatRenderContext *pRenderContext, mstudiomesh_t* pmesh, 
 		studiomeshgroup_t* pGroup, StudioModelLighting_t lighting, float r_blend, IMaterial* pMaterial,
 		int lod, ColorMeshInfo_t *pColorMeshes );
