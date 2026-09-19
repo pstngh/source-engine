@@ -981,6 +981,8 @@ void CCSPlayer::Spawn()
 	m_cycleLatchTimer.Start( RandomFloat( 0.0f, CycleLatchInterval ) );
 
 	StockPlayerAmmo();
+	if ( IsBot() )
+		m_bHasHelmet = false;
 
 	// BaseClass::Spawn resets flags, so restore the host's chosen god mode.
 	if ( !engine->IsDedicatedServer() && this == UTIL_GetListenServerHost() && sv_local_godmode.GetBool() )
@@ -1803,7 +1805,7 @@ bool CCSPlayer::IsArmored( int nHitGroup )
 			bApplyArmor = true;
 			break;
 		case HITGROUP_HEAD:
-			if ( m_bHasHelmet )
+			if ( m_bHasHelmet && !IsBot() )
 			{
 				bApplyArmor = true;
 			}
@@ -2306,6 +2308,9 @@ void CCSPlayer::TraceAttack( const CTakeDamageInfo &info, const Vector &vecDir, 
 			}
 
 			flDamage *= 4;
+			// Bots have no helmet; a bullet to the head always defeats their health.
+			if ( IsBot() && ( info.GetDamageType() & DMG_BULLET ) )
+				flDamage = MAX( flDamage, (float)GetHealth() + 1.0f );
 
 			if ( !m_bHasHelmet && sv_damage_kickback.GetBool() )
 			{

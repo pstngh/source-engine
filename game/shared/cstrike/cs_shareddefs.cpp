@@ -14,7 +14,8 @@ const float CS_PLAYER_SPEED_SHIELD	 = 160.0f;
 const float CS_PLAYER_SPEED_STOPPED	 =   1.0f;
 const float CS_PLAYER_SPEED_OBSERVER = 900.0f;
 
-const float CS_PLAYER_SPEED_DUCK_MODIFIER	= 0.34f;
+// OpenMoHAA sv_crouchspeedmult: crouching is 60% of the current walk/run speed.
+const float CS_PLAYER_SPEED_DUCK_MODIFIER	= 0.60f;
 const float CS_PLAYER_SPEED_WALK_MODIFIER	= 0.52f;
 const float CS_PLAYER_SPEED_CLIMB_MODIFIER	= 0.34f;
 

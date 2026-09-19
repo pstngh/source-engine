@@ -60,6 +60,14 @@ This branch enables the following server-controlled settings by default:
 - `weapon_recoil_scale 0.35` reduces weapon view recoil to 35% of stock.
 - `sv_damage_kickback 0` disables the stock view punch caused by taking damage.
 
+`+duck` toggles crouch on each key press, including with the usual Ctrl binding.
+Crouched movement uses 60% of the corresponding uncrouched walk or run speed,
+matching OpenMoHAA's default `sv_crouchspeedmult 0.6`.
+
+Bots buy body armor without a helmet and cannot keep a helmet from another
+source. A bullet headshot kills a bot in one hit, including with low-damage
+guns. Human players retain normal helmet and headshot behavior.
+
 Set the first three variables to `0` in the server console to restore their
 original behavior. Set `weapon_recoil_scale` to `1` for stock recoil or `0` for
 no recoil, and set `sv_damage_kickback` to `1` to restore damage view punch.

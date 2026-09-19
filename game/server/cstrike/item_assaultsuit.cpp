@@ -33,7 +33,7 @@ class CItemAssaultSuit : public CItem
 			return false;
 		}
 
-		pPlayer->m_bHasHelmet = true;
+		pPlayer->m_bHasHelmet = !pPlayer->IsBot();
 		pPlayer->SetArmorValue( 100 );
 
 		if ( pPlayer->IsDead() == false )
@@ -52,5 +52,4 @@ class CItemAssaultSuit : public CItem
 };
 
 LINK_ENTITY_TO_CLASS( item_assaultsuit, CItemAssaultSuit );
-
 

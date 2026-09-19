@@ -135,6 +135,9 @@ static	kbutton_t	in_attack2;
 static	kbutton_t	in_up;
 static	kbutton_t	in_down;
 static	kbutton_t	in_duck;
+#ifdef CSTRIKE_DLL
+static	kbutton_t	in_duckpress;
+#endif
 static	kbutton_t	in_reload;
 static	kbutton_t	in_alt1;
 static	kbutton_t	in_alt2;
@@ -474,8 +477,30 @@ void IN_UseDown ( const CCommand &args ) {KeyDown(&in_use, args[1] );}
 void IN_UseUp ( const CCommand &args ) {KeyUp(&in_use, args[1] );}
 void IN_JumpDown ( const CCommand &args ) {KeyDown(&in_jump, args[1] );}
 void IN_JumpUp ( const CCommand &args ) {KeyUp(&in_jump, args[1] );}
-void IN_DuckDown( const CCommand &args ) {KeyDown(&in_duck, args[1] );}
-void IN_DuckUp( const CCommand &args ) {KeyUp(&in_duck, args[1] );}
+void IN_DuckDown( const CCommand &args )
+{
+#ifdef CSTRIKE_DLL
+	// +duck remains bound to a key, but each new press changes the crouch state.
+	if ( !( in_duckpress.state & 1 ) )
+	{
+		if ( in_ducktoggle.state & 1 )
+			KeyUp( &in_ducktoggle, NULL );
+		else
+			KeyDown( &in_ducktoggle, NULL );
+	}
+	KeyDown( &in_duckpress, args[1] );
+#else
+	KeyDown( &in_duck, args[1] );
+#endif
+}
+void IN_DuckUp( const CCommand &args )
+{
+#ifdef CSTRIKE_DLL
+	KeyUp( &in_duckpress, args[1] );
+#else
+	KeyUp( &in_duck, args[1] );
+#endif
+}
 void IN_ReloadDown( const CCommand &args ) {KeyDown(&in_reload, args[1] );}
 void IN_ReloadUp( const CCommand &args ) {KeyUp(&in_reload, args[1] );}
 void IN_Alt1Down( const CCommand &args ) {KeyDown(&in_alt1, args[1] );}
@@ -1642,7 +1667,7 @@ static ConCommand endleanleft("-leanleft", IN_LeanLeftUp);
 static ConCommand startleanright("+leanright", IN_LeanRightDown);
 static ConCommand endleanright("-leanright", IN_LeanRightUp);
 
-#ifdef TF_CLIENT_DLL
+#if defined( TF_CLIENT_DLL ) || defined( CSTRIKE_DLL )
 static ConCommand toggle_duck( "toggle_duck", IN_DuckToggle );
 #endif
 
