@@ -39,6 +39,7 @@
 	#include "info_view_parameters.h"
 	#include "cs_bot_manager.h"
 	#include "cs_bot.h"
+	#include "nav_area.h"
 	#include "eventqueue.h"
 	#include "fmtstr.h"
 	#include "teamplayroundbased_gamerules.h"
@@ -103,6 +104,9 @@ static CViewVectors g_CSViewVectors(
 #ifndef CLIENT_DLL
 LINK_ENTITY_TO_CLASS(info_player_terrorist, CPointEntity);
 LINK_ENTITY_TO_CLASS(info_player_counterterrorist,CPointEntity);
+
+ConVar mp_ffa_nav_spawns( "mp_ffa_nav_spawns", "1", FCVAR_NOTIFY,
+	"Use safe navigation mesh positions across the map for FFA spawns; fall back to map spawns if no safe area exists." );
 LINK_ENTITY_TO_CLASS(info_player_logo,CPointEntity);
 #endif
 
@@ -4749,6 +4753,46 @@ ConVar cl_autohelp(
 
 	CBaseEntity *CCSGameRules::GetPlayerSpawnSpot( CBasePlayer *pPlayer )
 	{
+		if ( IsFreeForAll() && mp_ffa_nav_spawns.GetBool() && TheNavAreas.Count() > 0 )
+		{
+			// Nav areas cover the playable map, unlike the fixed objective-team spawns.
+			// Walk the areas from a random starting point so every usable area can be selected.
+			const int areaCount = TheNavAreas.Count();
+			const int firstArea = RandomInt( 0, areaCount - 1 );
+			for ( int offset = 0; offset < areaCount; ++offset )
+			{
+				CNavArea *area = TheNavAreas[(firstArea + offset) % areaCount];
+				if ( !area || area->GetSizeX() < 48.0f || area->GetSizeY() < 48.0f ||
+					area->IsBlocked( pPlayer->GetTeamNumber() ) )
+					continue;
+
+				Vector origin = area->GetCenter() + Vector( 0, 0, 1 );
+				const Vector mins = origin + GetViewVectors()->m_vHullMin;
+				const Vector maxs = origin + GetViewVectors()->m_vHullMax;
+				if ( !UTIL_IsSpaceEmpty( pPlayer, mins, maxs ) )
+					continue;
+
+				bool nearPlayer = false;
+				for ( int i = 1; i <= gpGlobals->maxClients; ++i )
+				{
+					CBasePlayer *other = UTIL_PlayerByIndex( i );
+					if ( other && other != pPlayer && other->IsAlive() &&
+						(other->GetAbsOrigin() - origin).LengthSqr() < (256.0f * 256.0f) )
+					{
+						nearPlayer = true;
+						break;
+					}
+				}
+				if ( nearPlayer )
+					continue;
+
+				QAngle angles( 0, RandomFloat( 0, 360 ), 0 );
+				pPlayer->Teleport( &origin, &angles, &vec3_origin );
+				pPlayer->m_Local.m_vecPunchAngle = vec3_angle;
+				return pPlayer;
+			}
+		}
+
 		// gat valid spwan point
 		CBaseEntity *pSpawnSpot = pPlayer->EntSelectSpawnPoint();
 

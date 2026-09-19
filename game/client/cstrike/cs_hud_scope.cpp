@@ -44,6 +44,7 @@ protected:
 private:
 	CMaterialReference m_ScopeMaterial;	
 	CMaterialReference m_DustOverlayMaterial;
+	float m_flScopeAlpha;
 
 	int m_iScopeArcTexture;
 	int m_iScopeDustTexture;
@@ -56,7 +57,7 @@ using namespace vgui;
 //-----------------------------------------------------------------------------
 // Purpose: Constructor
 //-----------------------------------------------------------------------------
-CHudScope::CHudScope( const char *pElementName ) : CHudElement(pElementName), BaseClass(NULL, "HudScope")
+CHudScope::CHudScope( const char *pElementName ) : CHudElement(pElementName), BaseClass(NULL, "HudScope"), m_flScopeAlpha(0.0f)
 {
 	vgui::Panel *pParent = g_pClientMode->GetViewport();
 	SetParent( pParent );
@@ -82,6 +83,7 @@ void CHudScope::Init( void )
 void CHudScope::LevelInit( void )
 {
 	Init();
+	m_flScopeAlpha = 0.0f;
 }
 
 //-----------------------------------------------------------------------------
@@ -118,14 +120,19 @@ void CHudScope::Paint( void )
 	Assert( m_iScopeDustTexture );
 
 	// see if we're zoomed with a sniper rifle
-	if( pPlayer->GetFOV() != pPlayer->GetDefaultFOV() &&
-		pWeapon->GetCSWpnData().m_WeaponType == WEAPONTYPE_SNIPER_RIFLE )
+	const bool scoped = pPlayer->GetFOV() != pPlayer->GetDefaultFOV() &&
+		pWeapon->GetCSWpnData().m_WeaponType == WEAPONTYPE_SNIPER_RIFLE;
+	// OpenMoHAA fades the zoom overlay at 0.015 alpha per millisecond.
+	m_flScopeAlpha = clamp( m_flScopeAlpha + (scoped ? 1.0f : -1.0f) * gpGlobals->frametime * 15.0f, 0.0f, 1.0f );
+	if ( m_flScopeAlpha > 0.0f )
 	{
+		const int alpha = (int)(255.0f * m_flScopeAlpha);
 		int screenWide, screenTall;
 		GetHudSize(screenWide, screenTall);
 
 		// calculate the bounds in which we should draw the scope
-		int inset = screenTall / 16;
+		// OpenMoHAA's zoom overlay occupies a screen-height square.
+		int inset = 0;
 		int y1 = inset;
 		int x1 = (screenWide - screenTall) / 2 + inset; 
 		int y2 = screenTall - inset;
@@ -150,7 +157,7 @@ void CHudScope::Paint( void )
 		int iMiddleY = (screenTall / 2 );
 
 		vgui::surface()->DrawSetTexture( m_iScopeDustTexture );
-		vgui::surface()->DrawSetColor( 255, 255, 255, 255 );
+		vgui::surface()->DrawSetColor( 255, 255, 255, alpha );
 
 		vert[0].Init( Vector2D( iMiddleX + xMod, iMiddleY + yMod ), uv21 );
 		vert[1].Init( Vector2D( iMiddleX - xMod, iMiddleY + yMod ), uv11 );
@@ -158,7 +165,7 @@ void CHudScope::Paint( void )
 		vert[3].Init( Vector2D( iMiddleX + xMod, iMiddleY - yMod ), uv22 );
 		vgui::surface()->DrawTexturedPolygon( 4, vert );
 		
-		vgui::surface()->DrawSetColor(0,0,0,255);
+		vgui::surface()->DrawSetColor(0,0,0,alpha);
 
 		//Draw the reticle with primitives
 		vgui::surface()->DrawLine( 0, y, screenWide, y );

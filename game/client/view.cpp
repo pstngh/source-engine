@@ -541,6 +541,16 @@ void CViewRender::OnRenderStart()
 		else
 #endif
 		{
+#if defined( CSTRIKE_DLL )
+			// OpenMoHAA scales mouse input by the vertical FOV divided by 75.
+			// Its widescreen FOV keeps the 4:3 vertical FOV, so this calculation
+			// uses the base horizontal FOV before aspect-ratio expansion.
+			const float verticalFOV = RAD2DEG( 2.0f * atanf( tanf( DEG2RAD( (float)localFOV ) * 0.5f ) * 0.75f ) );
+			gHUD.m_flFOVSensitivityAdjust = verticalFOV / 75.0f * zoom_sensitivity_ratio.GetFloat();
+#ifndef _XBOX
+			gHUD.m_flMouseSensitivity = gHUD.m_flFOVSensitivityAdjust * sensitivity.GetFloat();
+#endif
+#else
 			// No override, don't use huge sensitivity
 			if ( localFOV == iDefaultFOV )
 			{
@@ -565,6 +575,7 @@ void CViewRender::OnRenderStart()
 				gHUD.m_flMouseSensitivity = gHUD.m_flFOVSensitivityAdjust * sensitivity.GetFloat(); // regular sensitivity
 #endif
 			}
+#endif // CSTRIKE_DLL
 		}
 	}
 }
@@ -1360,4 +1371,3 @@ CON_COMMAND( getpos, "dump position and angles to the console" )
 	Warning( "%s %f %f %f;", pCommand1, vecOrigin.x, vecOrigin.y, vecOrigin.z );
 	Warning( "%s %f %f %f\n", pCommand2, angles.x, angles.y, angles.z );
 }
-

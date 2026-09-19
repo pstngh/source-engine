@@ -67,6 +67,8 @@ void __MsgFunc_MatchEndConditions( bf_read &msg );
 class CHudChat;
 
 ConVar default_fov( "default_fov", "80", FCVAR_CHEAT );
+ConVar cl_drawviewmodel( "cl_drawviewmodel", "2", FCVAR_ARCHIVE,
+	"Draw the first-person weapon (0 = hidden, 1 or 2 = shown)." );
 
 IClientMode *g_pClientMode = NULL;
 
@@ -439,7 +441,8 @@ ClientModeCSNormal* GetClientModeCSNormal()
 
 float ClientModeCSNormal::GetViewModelFOV( void )
 {
-	return 74.0f;
+	// OpenMoHAA renders the player weapon with the same 80-degree base FOV as the world.
+	return 80.0f;
 }
 
 int ClientModeCSNormal::GetDeathMessageStartHeight( void )
@@ -1018,6 +1021,9 @@ void ClientModeCSNormal::PostRenderVGui()
 
 bool ClientModeCSNormal::ShouldDrawViewModel( void )
 {
+	if ( !cl_drawviewmodel.GetBool() )
+		return false;
+
 	C_CSPlayer *pPlayer = C_CSPlayer::GetLocalCSPlayer();
 	
 	if( pPlayer && pPlayer->GetFOV() != CSGameRules()->DefaultFOV() )

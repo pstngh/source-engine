@@ -73,6 +73,14 @@ bind z +leanleft
 bind c +leanright
 ```
 
+The first-person weapon camera uses an 80-degree base FOV with OpenMoHAA-style
+movement offsets, sway, and scoped mouse sensitivity. `cl_drawviewmodel 0`
+hides the weapon; its default is `2`. `cl_mohaa_viewmodel_motion 0` disables the
+extra running, crouching, and airborne offsets. Counter-Strike weapon models
+still have their original geometry and animations. The AWP shows the regular
+crosshair while unscoped; all four sniper rifles now toggle directly between
+unscoped and their original first 40-degree zoom level.
+
 ## Local practice modes
 
 Games created from the menu start in free-for-all mode by default, with automatic
@@ -88,3 +96,7 @@ TDM and FFA respawn players after 1.5 seconds and keep the round running. Change
 the delay with `mp_deathmatch_respawn_time`, for example
 `mp_deathmatch_respawn_time 0.5`. Add bots with `bot_quota 9`, or use
 `bot_quota_mode fill; bot_quota 10` to keep ten total players in the session.
+FFA now chooses safe positions from the map's navigation mesh for humans and
+bots, throughout the playable map. If no usable mesh area is found, it uses
+the map's normal spawn entities. Set `mp_ffa_nav_spawns 0` to use only the map
+spawn entities.

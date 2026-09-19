@@ -21,7 +21,6 @@
 #endif
 
 const int cScoutMidZoomFOV = 40;
-const int cScoutMaxZoomFOV = 15;
 
 
 class CWeaponScout : public CWeaponCSBaseGun
@@ -83,12 +82,7 @@ void CWeaponScout::SecondaryAttack()
 		m_weaponMode = Secondary_Mode;
 		m_fAccuracyPenalty += GetCSWpnData().m_fInaccuracyAltSwitch;
 	}
-	else if (pPlayer->GetFOV() == cScoutMidZoomFOV)
-	{
-		pPlayer->SetFOV( pPlayer, cScoutMaxZoomFOV, kZoomTime );
-		m_weaponMode = Secondary_Mode;
-	}
-	else if (pPlayer->GetFOV() == cScoutMaxZoomFOV)
+	else
 	{
 		pPlayer->SetFOV( pPlayer, pPlayer->GetDefaultFOV(), kZoomTime );
 		m_weaponMode = Primary_Mode;
@@ -165,17 +159,7 @@ void CWeaponScout::PrimaryAttack( void )
 
 	if ( m_weaponMode == Secondary_Mode )
 	{	
-		float	midFOVdistance = fabs( pPlayer->GetFOV() - (float)cScoutMidZoomFOV );
-		float	farFOVdistance = fabs( pPlayer->GetFOV() - (float)cScoutMaxZoomFOV );
-
-		if ( midFOVdistance < farFOVdistance )
-		{
-			pPlayer->m_iLastZoom = cScoutMidZoomFOV;
-		}
-		else
-		{
-			pPlayer->m_iLastZoom = cScoutMaxZoomFOV;
-		}
+		pPlayer->m_iLastZoom = cScoutMidZoomFOV;
 		
 // 		#ifndef CLIENT_DLL
 			pPlayer->m_bResumeZoom = true;

@@ -1088,8 +1088,10 @@ void CWeaponCSBase::DefaultTouch(CBaseEntity *pOther)
 		if ( pPlayer->HasShield() && pPlayer->IsShieldDrawn() == true )
 			 return;
 
-		// no crosshair for sniper rifles
-		bool bCrosshairVisible = crosshair.GetBool() && GetCSWpnData().m_WeaponType != WEAPONTYPE_SNIPER_RIFLE;
+		// The AWP has a normal crosshair while unscoped; the scope draws its own reticle.
+		bool bCrosshairVisible = crosshair.GetBool() &&
+			( GetCSWpnData().m_WeaponType != WEAPONTYPE_SNIPER_RIFLE ||
+			  ( GetWeaponID() == WEAPON_AWP && pPlayer->GetFOV() == pPlayer->GetDefaultFOV() ) );
 
 		if ( !bCrosshairVisible 
 #if ALLOW_WEAPON_SPREAD_DISPLAY
@@ -1630,125 +1632,63 @@ bool CWeaponCSBase::IsUseable()
 
 #if defined( CLIENT_DLL )
 
-	float	g_lateralBob = 0;
-	float	g_verticalBob = 0;
+	static Vector g_mohaaViewmodelSway( 0, 0, 0 );
 
-	static ConVar	cl_bobcycle( "cl_bobcycle","0.8", FCVAR_CHEAT );
-	static ConVar	cl_bob( "cl_bob","0.002", FCVAR_CHEAT );
-	static ConVar	cl_bobup( "cl_bobup","0.5", FCVAR_CHEAT );
-
-	//-----------------------------------------------------------------------------
-	// Purpose:
-	// Output : float
-	//-----------------------------------------------------------------------------
 	float CWeaponCSBase::CalcViewmodelBob( void )
 	{
-		static	float bobtime;
-		static	float lastbobtime;
-		static  float lastspeed;
-		float	cycle;
-
 		CBasePlayer *player = ToBasePlayer( GetOwner() );
-		//Assert( player );
-
-		//NOTENOTE: For now, let this cycle continue when in the air, because it snaps badly without it
-
-		if ( ( !gpGlobals->frametime ) ||
-			 ( player == NULL ) ||
-			 ( cl_bobcycle.GetFloat() <= 0.0f ) ||
-			 ( cl_bobup.GetFloat() <= 0.0f ) ||
-			 ( cl_bobup.GetFloat() >= 1.0f ) )
+		if ( !player || gpGlobals->frametime <= 0.0f )
 		{
-			//NOTENOTE: We don't use this return value in our case (need to restructure the calculation function setup!)
-			return 0.0f;// just use old value
+			g_mohaaViewmodelSway = vec3_origin;
+			return 0.0f;
 		}
 
-		//Find the speed of the player
-		float speed = player->GetLocalVelocity().Length2D();
-		float flmaxSpeedDelta = MAX( 0, (gpGlobals->curtime - lastbobtime) * 320.0f );
-
-		// don't allow too big speed changes
-		speed = clamp( speed, lastspeed-flmaxSpeedDelta, lastspeed+flmaxSpeedDelta );
-		speed = clamp( speed, -320, 320 );
-
-		lastspeed = speed;
-
-		//FIXME: This maximum speed value must come from the server.
-		//		 MaxSpeed() is not sufficient for dealing with sprinting - jdw
-
-
-
-		float bob_offset = RemapVal( speed, 0, 320, 0.0f, 1.0f );
-
-		bobtime += ( gpGlobals->curtime - lastbobtime ) * bob_offset;
-		lastbobtime = gpGlobals->curtime;
-
-		//Calculate the vertical bob
-		cycle = bobtime - (int)(bobtime/cl_bobcycle.GetFloat())*cl_bobcycle.GetFloat();
-		cycle /= cl_bobcycle.GetFloat();
-
-		if ( cycle < cl_bobup.GetFloat() )
+		static CBasePlayer *lastPlayer = NULL;
+		static float phase = 0.0f;
+		static float amplitude = 0.0f;
+		if ( lastPlayer != player )
 		{
-			cycle = M_PI * cycle / cl_bobup.GetFloat();
+			phase = amplitude = 0.0f;
+			lastPlayer = player;
+		}
+
+		const float speed = player->GetLocalVelocity().Length();
+		if ( player->GetFlags() & FL_ONGROUND )
+		{
+			// OpenMoHAA's first-person bob phase and amplitude.
+			phase += gpGlobals->frametime * 2.0f * M_PI * (speed * 0.0015f + 0.9f);
+			amplitude = speed * (amplitude > 0.0f ? 1.0f : 0.5f);
+			CCSPlayer *csPlayer = GetPlayerOwner();
+			if ( csPlayer && csPlayer->m_flLeanAngle != 0.0f )
+				amplitude *= 0.75f;
+			amplitude *= (1.0f - fabsf( player->EyeAngles()[PITCH] ) / 90.0f * 0.5f) * 0.5f;
 		}
 		else
 		{
-			cycle = M_PI + M_PI*(cycle-cl_bobup.GetFloat())/(1.0 - cl_bobup.GetFloat());
+			amplitude = MAX( 0.0f, amplitude * (1.0f - 2.0f * gpGlobals->frametime) );
+			if ( amplitude < 0.1f )
+				amplitude = 0.0f;
 		}
 
-		g_verticalBob = speed*0.005f;
-		g_verticalBob = g_verticalBob*0.3 + g_verticalBob*0.7*sin(cycle);
-
-		g_verticalBob = clamp( g_verticalBob, -7.0f, 4.0f );
-
-		//Calculate the lateral bob
-		cycle = bobtime - (int)(bobtime/cl_bobcycle.GetFloat()*2)*cl_bobcycle.GetFloat()*2;
-		cycle /= cl_bobcycle.GetFloat()*2;
-
-		if ( cycle < cl_bobup.GetFloat() )
-		{
-			cycle = M_PI * cycle / cl_bobup.GetFloat();
-		}
-		else
-		{
-			cycle = M_PI + M_PI*(cycle-cl_bobup.GetFloat())/(1.0 - cl_bobup.GetFloat());
-		}
-
-		g_lateralBob = speed*0.005f;
-		g_lateralBob = g_lateralBob*0.3 + g_lateralBob*0.7*sin(cycle);
-		g_lateralBob = clamp( g_lateralBob, -7.0f, 4.0f );
-
-		//NOTENOTE: We don't use this return value in our case (need to restructure the calculation function setup!)
+		const float side = sinf( phase + M_PI / 10.0f ) * amplitude * 0.005f;
+		const float verticalPhase = sinf( 2.0f * (phase - 0.94f) + M_PI );
+		const float vertical =
+			(sinf( (phase - 0.94f) * 4.0f + M_PI / 2.0f ) * 0.125f + verticalPhase) * amplitude * 0.003f;
+		g_mohaaViewmodelSway.Init( side * 0.1f, side, vertical );
 		return 0.0f;
-
 	}
 
-	//-----------------------------------------------------------------------------
-	// Purpose:
-	// Input  : &origin -
-	//			&angles -
-	//			viewmodelindex -
-	//-----------------------------------------------------------------------------
 	void CWeaponCSBase::AddViewmodelBob( CBaseViewModel *viewmodel, Vector &origin, QAngle &angles )
 	{
-		Vector	forward, right;
-		AngleVectors( angles, &forward, &right, NULL );
-
 		CalcViewmodelBob();
 
-		// Apply bob, but scaled down to 40%
-		VectorMA( origin, g_verticalBob * 0.4f, forward, origin );
-
-		// Z bob a bit more
-		origin[2] += g_verticalBob * 0.1f;
-
-		// bob the angles
-		angles[ ROLL ]	+= g_verticalBob * 0.5f;
-		angles[ PITCH ]	-= g_verticalBob * 0.4f;
-
-		angles[ YAW ]	-= g_lateralBob  * 0.3f;
-
-	//	VectorMA( origin, g_lateralBob * 0.2f, right, origin );
+		QAngle offsetAngles = angles;
+		offsetAngles[PITCH] *= 0.5f;
+		offsetAngles[ROLL] *= 0.75f;
+		Vector forward, right, up;
+		AngleVectors( offsetAngles, &forward, &right, &up );
+		// OpenMoHAA's side axis is left; Source's AngleVectors returns right.
+		origin += forward * g_mohaaViewmodelSway.x - right * g_mohaaViewmodelSway.y + up * g_mohaaViewmodelSway.z;
 	}
 
 #else

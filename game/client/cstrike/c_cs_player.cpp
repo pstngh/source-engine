@@ -74,6 +74,8 @@ extern ConVar	spec_freeze_distance_max;
 //=============================================================================
 
 ConVar cl_left_hand_ik( "cl_left_hand_ik", "0", 0, "Attach player's left hand to rifle with IK." );
+ConVar cl_mohaa_viewmodel_motion( "cl_mohaa_viewmodel_motion", "1", FCVAR_ARCHIVE,
+	"Apply OpenMoHAA-style crouch, airborne, and running weapon offsets." );
 
 ConVar cl_ragdoll_physics_enable( "cl_ragdoll_physics_enable", "1", 0, "Enable/disable ragdoll physics." );
 
@@ -880,8 +882,8 @@ CSPlayerState C_CSPlayer::State_Get() const
 
 float C_CSPlayer::GetMinFOV() const
 {
-	// Min FOV for AWP.
-	return 10;
+	// The first sniper zoom is now the only sniper zoom.
+	return 40;
 }
 
 
@@ -1569,9 +1571,49 @@ void C_CSPlayer::CalcView( Vector &eyeOrigin, QAngle &eyeAngles, float &zNear, f
 
 void C_CSPlayer::CalcViewModelView( const Vector &eyeOrigin, const QAngle &eyeAngles )
 {
-	Vector up;
-	AngleVectors( eyeAngles, NULL, NULL, &up );
-	BaseClass::CalcViewModelView( eyeOrigin - up * fabsf( m_flLeanAngle ) * CS_LEAN_VIEWMODEL_LOWER, eyeAngles );
+	Vector viewUp;
+	AngleVectors( eyeAngles, NULL, NULL, &viewUp );
+	Vector modelOrigin = eyeOrigin - viewUp * fabsf( m_flLeanAngle ) * CS_LEAN_VIEWMODEL_LOWER;
+
+	Vector forward, right, up;
+	QAngle offsetAngles = eyeAngles;
+	offsetAngles[PITCH] *= 0.5f;
+	offsetAngles[ROLL] *= 0.75f;
+	AngleVectors( offsetAngles, &forward, &right, &up );
+
+	if ( cl_mohaa_viewmodel_motion.GetBool() )
+	{
+		// Match the defaults of OpenMoHAA's vm_offset_* cvars. Source's weapon
+		// geometry remains different, so these are camera-relative movement offsets.
+		Vector target( 0, 0, 0 );
+		if ( !( GetFlags() & FL_ONGROUND ) )
+		{
+			target.Init( -3.0f, 1.5f, -6.0f );
+		}
+		else
+		{
+			if ( GetFlags() & FL_DUCKING )
+				target.Init( -0.5f, 2.25f, 0.2f );
+			const float move = RemapValClamped( GetLocalVelocity().Length2D(), 100.0f, 250.0f, 0.0f, 1.0f );
+			target += Vector( -2.0f, 1.5f, -4.0f ) * move;
+		}
+
+		if ( target.LengthSqr() > 64.0f )
+			target *= 8.0f / target.Length();
+
+		static C_CSPlayer *lastPlayer = NULL;
+		static Vector current( 0, 0, 0 );
+		if ( lastPlayer != this )
+		{
+			current = vec3_origin;
+			lastPlayer = this;
+		}
+		current += (target - current) * clamp( gpGlobals->frametime * 8.0f, 0.0f, 1.0f );
+		// OpenMoHAA uses a left vector; Source's AngleVectors supplies right.
+		modelOrigin += forward * current.x - right * current.y + up * current.z;
+	}
+
+	BaseClass::CalcViewModelView( modelOrigin, eyeAngles );
 }
 
 //-----------------------------------------------------------------------------

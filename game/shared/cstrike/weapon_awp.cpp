@@ -23,7 +23,6 @@
 #define SNIPER_ZOOM_CONTEXT		"SniperRifleThink"
 
 const int cAWPMidZoomFOV = 40;
-const int cAWPMaxZoomFOV = 10;
 
 #ifdef AWP_UNZOOM
 	ConVar sv_awpunzoomdelay( 
@@ -123,11 +122,6 @@ void CWeaponAWP::SecondaryAttack()
 			m_weaponMode = Secondary_Mode;
 			m_fAccuracyPenalty += GetCSWpnData().m_fInaccuracyAltSwitch;
 	}
-	else if ( pPlayer->GetFOV() == cAWPMidZoomFOV )
-	{
-			pPlayer->SetFOV( pPlayer, cAWPMaxZoomFOV, kZoomTime );
-			m_weaponMode = Secondary_Mode;
-	}
 	else
 	{
 		pPlayer->SetFOV( pPlayer, pPlayer->GetDefaultFOV(), kZoomTime );
@@ -215,16 +209,7 @@ void CWeaponAWP::PrimaryAttack()
 
 	if ( m_weaponMode == Secondary_Mode )
 	{	
-		float	midFOVdistance = fabs( pPlayer->GetFOV() - (float)cAWPMidZoomFOV );
-		float	farFOVdistance = fabs( pPlayer->GetFOV() - (float)cAWPMaxZoomFOV );
-		if ( midFOVdistance < farFOVdistance )
-		{
-			pPlayer->m_iLastZoom = cAWPMidZoomFOV;
-		}
-		else
-		{
-			pPlayer->m_iLastZoom = cAWPMaxZoomFOV;
-		}
+		pPlayer->m_iLastZoom = cAWPMidZoomFOV;
 		
 		#ifdef AWP_UNZOOM
 			SetContextThink( &CWeaponAWP::UnzoomThink, gpGlobals->curtime + sv_awpunzoomdelay.GetFloat(), SNIPER_ZOOM_CONTEXT );

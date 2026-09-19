@@ -89,12 +89,7 @@ void CWeaponG3SG1::SecondaryAttack()
 		m_weaponMode = Secondary_Mode;
 		m_fAccuracyPenalty += GetCSWpnData().m_fInaccuracyAltSwitch;
 	}
-	else if (pPlayer->GetFOV() == 40)
-	{
-		pPlayer->SetFOV( pPlayer, 15, kZoomTime );
-		m_weaponMode = Secondary_Mode;
-	}
-	else if (pPlayer->GetFOV() == 15)
+	else
 	{
 		pPlayer->SetFOV( pPlayer, pPlayer->GetDefaultFOV(), kZoomTime );
 		m_weaponMode = Primary_Mode;

@@ -251,7 +251,6 @@ bool CCSBot::AdjustZoom( float range )
 	if (IsUsingSniperRifle())
 	{
 		const float sniperZoomRange = 150.0f;	// NOTE: This must be less than sniperMinRange in AttackState
-		const float sniperFarZoomRange = 1500.0f;
 
 		// if range is too close, don't zoom
 		if (range <= sniperZoomRange)
@@ -262,18 +261,10 @@ bool CCSBot::AdjustZoom( float range )
 				adjustZoom = true;
 			}
 		}
-		else if (range < sniperFarZoomRange)
+		else
 		{
 			// maintain low zoom
 			if (GetZoomLevel() != LOW_ZOOM)
-			{
-				adjustZoom = true;
-			}
-		}
-		else
-		{
-			// maintain high zoom
-			if (GetZoomLevel() != HIGH_ZOOM)
 			{
 				adjustZoom = true;
 			}
@@ -1360,4 +1351,3 @@ bool CCSBot::DidPlayerJustFireWeapon( const CCSPlayer *player ) const
 	CWeaponCSBase *weapon = player->GetActiveCSWeapon();
 	return (weapon && !weapon->IsSilenced() && weapon->m_flNextPrimaryAttack > gpGlobals->curtime);
 }
-
